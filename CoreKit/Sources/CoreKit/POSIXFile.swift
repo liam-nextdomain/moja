@@ -5,7 +5,7 @@ import Foundation
 /// 이름이 같아 보인다고 같은 파일이 아니고, 달라 보인다고 다른 파일이 아니다.
 /// 정규화를 무시하는 볼륨에서는 NFD 이름과 NFC 이름이 같은 파일을 가리키고,
 /// 하드링크는 이름이 둘이지만 파일은 하나다.
-public struct FileIdentity: Equatable, Sendable {
+public struct FileIdentity: Hashable, Sendable {
     public let device: dev_t
     public let inode: UInt64
 
