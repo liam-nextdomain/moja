@@ -66,8 +66,22 @@ final class AppModel: ObservableObject {
     private var watchers: [UUID: FolderWatcher] = [:]
     /// 볼륨 능력 판정은 앱 전체에서 공유한다. 폴더마다 다시 측정할 이유가 없다.
     private let volumes = VolumeCapabilities()
+    /// 끊긴 폴더가 있는 동안만 살아 있는 재연결 감시 장치.
+    private var reconnectTimer: Timer?
+    private var mountObserver: NSObjectProtocol?
 
-    init(settings: SettingsStore = SettingsStore(), log: LogStore = LogStore()) {
+    convenience init() {
+        // 수용 테스트가 실제 설정·로그를 건드리지 않도록 열어 둔 이음매다.
+        // 환경변수를 일부러 설정하지 않으면 평소 경로를 쓴다.
+        let environment = ProcessInfo.processInfo.environment
+        let defaults = environment["MOJA_DEFAULTS_SUITE"].flatMap { UserDefaults(suiteName: $0) }
+        let logDirectory = environment["MOJA_LOG_DIR"].map { URL(fileURLWithPath: $0) }
+
+        self.init(settings: SettingsStore(defaults: defaults ?? .standard),
+                  log: LogStore(directory: logDirectory ?? LogStore.defaultDirectory))
+    }
+
+    init(settings: SettingsStore, log: LogStore) {
         self.settings = settings
         self.log = log
         self.isPaused = settings.isPaused
@@ -202,6 +216,10 @@ final class AppModel: ObservableObject {
 
         case .unavailable:
             updateCondition(folderID, to: .disconnected)
+            // 감시자를 놓아 준다. 디스크가 다시 붙었을 때 새로 만들 수 있어야 한다 (T11).
+            watchers[folderID]?.stop()
+            watchers[folderID] = nil
+            startReconnectWatchIfNeeded()
 
         case .unsupportedVolume(let fileSystem):
             updateCondition(folderID, to: .unsupported(fileSystem: fileSystem))
@@ -230,6 +248,67 @@ final class AppModel: ObservableObject {
             Task { @MainActor in
                 guard let self else { return }
                 for id in unreachable { self.updateCondition(id, to: .disconnected) }
+                self.startReconnectWatchIfNeeded()
+            }
+        }
+    }
+
+    // MARK: - 다시 연결되면 감시 재개 (FR-1, T11)
+
+    /// 연결이 끊긴 폴더가 하나라도 있는 동안만 돈다. 전부 돌아오면 스스로 멈춘다.
+    private func startReconnectWatchIfNeeded() {
+        guard hasDisconnectedFolder else { return }
+        guard reconnectTimer == nil else { return }
+
+        // 볼륨이 붙는 순간을 정확히 알려 주는 알림. 폴링보다 빠르고 싸다.
+        if mountObserver == nil {
+            mountObserver = NSWorkspace.shared.notificationCenter.addObserver(
+                forName: NSWorkspace.didMountNotification, object: nil, queue: .main
+            ) { [weak self] _ in
+                Task { @MainActor in self?.retryDisconnectedFolders() }
+            }
+        }
+
+        // 네트워크 공유처럼 마운트 알림이 오지 않는 경우를 위한 보조 확인.
+        let timer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [weak self] _ in
+            Task { @MainActor in self?.retryDisconnectedFolders() }
+        }
+        reconnectTimer = timer
+    }
+
+    private func stopReconnectWatch() {
+        reconnectTimer?.invalidate()
+        reconnectTimer = nil
+        if let mountObserver {
+            NSWorkspace.shared.notificationCenter.removeObserver(mountObserver)
+            self.mountObserver = nil
+        }
+    }
+
+    private var hasDisconnectedFolder: Bool {
+        statuses.contains { $0.condition == .disconnected }
+    }
+
+    /// 끊겼던 폴더가 돌아왔는지 확인하고, 돌아왔으면 감시를 다시 건다.
+    private func retryDisconnectedFolders() {
+        let candidates = statuses.filter { $0.condition == .disconnected }.map(\.folder)
+        guard !candidates.isEmpty else {
+            stopReconnectWatch()
+            return
+        }
+
+        fileQueue.async { [weak self] in
+            let returned = candidates.filter(\.isReachable).map(\.id)
+            guard !returned.isEmpty else { return }
+            Task { @MainActor in
+                guard let self else { return }
+                for id in returned {
+                    self.updateCondition(id, to: self.settings.folders
+                        .first { $0.id == id }?.isEnabled == false ? .off : .watching)
+                }
+                self.log.note("다시 연결된 폴더의 감시를 재개합니다 (\(returned.count)개)")
+                self.syncWatchers()
+                if !self.hasDisconnectedFolder { self.stopReconnectWatch() }
             }
         }
     }
