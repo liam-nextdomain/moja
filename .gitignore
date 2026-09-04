@@ -1,0 +1,25 @@
+# XcodeGen 생성물 — project.yml이 진실이다. 절대 손으로 고치지 않는다.
+Moja.xcodeproj/
+
+# 빌드 산출물
+build/
+DerivedData/
+.build/
+.swiftpm/
+Package.resolved
+
+# Xcode 사용자별 상태
+xcuserdata/
+*.xcuserstate
+*.xcscmblueprint
+*.xccheckout
+*.moved-aside
+*.hmap
+*.dSYM
+*.dSYM.zip
+
+# macOS
+.DS_Store
+
+# 로컬 테스트 픽스처 (make-nfd-fixtures.sh 출력)
+/fixtures/

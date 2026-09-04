@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!--
+	  샌드박스를 쓰지 않는다 (요구사항 5장). App Store 배포 대상이 아니며,
+	  임의 폴더를 감시해야 하므로 security-scoped bookmark 없이 경로로 접근한다.
+	  Hardened Runtime은 켜지만, 현재 필요한 예외(entitlement)는 없다.
+	-->
+</dict>
+</plist>

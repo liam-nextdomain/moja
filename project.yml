@@ -1,0 +1,72 @@
+name: Moja
+
+options:
+  bundleIdPrefix: dev.liampark
+  deploymentTarget:
+    macOS: "13.0"
+  createIntermediateGroups: true
+  generateEmptyDirectories: false
+  groupSortPosition: top
+
+packages:
+  CoreKit:
+    path: CoreKit
+
+settings:
+  base:
+    # Universal (Apple Silicon + Intel) — 요구사항 5장.
+    # Debug에서 ONLY_ACTIVE_ARCH를 끄면 앱은 2개 아키텍처로 빌드되는데 CoreKit 패키지는
+    # 활성 아키텍처만 빌드해서 모듈을 못 찾는다. Debug는 활성 아키텍처만, Universal은
+    # Release/아카이브에서 보장한다.
+    ARCHS: $(ARCHS_STANDARD)
+
+    # Swift 6 strict concurrency는 FSEvents의 C 콜백 경계와 충돌한다.
+    # v1은 Swift 5 언어 모드 + @MainActor 규율로 간다. (계획 D-note)
+    SWIFT_VERSION: "5.0"
+    SWIFT_STRICT_CONCURRENCY: minimal
+
+    # 서명: Developer ID 없음 → ad-hoc + Hardened Runtime (요구사항 8장 1차)
+    CODE_SIGN_STYLE: Manual
+    CODE_SIGN_IDENTITY: "-"
+    DEVELOPMENT_TEAM: ""
+    ENABLE_HARDENED_RUNTIME: YES
+    ENABLE_APP_SANDBOX: NO
+
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    DEAD_CODE_STRIPPING: YES
+  configs:
+    Debug:
+      ONLY_ACTIVE_ARCH: YES
+    Release:
+      ONLY_ACTIVE_ARCH: NO
+      SWIFT_COMPILATION_MODE: wholemodule
+
+targets:
+  Moja:
+    type: application
+    platform: macOS
+    sources:
+      - path: App
+    dependencies:
+      - package: CoreKit
+    settings:
+      base:
+        PRODUCT_NAME: Moja
+        PRODUCT_BUNDLE_IDENTIFIER: dev.liampark.moja
+        INFOPLIST_FILE: App/Resources/Info.plist
+        GENERATE_INFOPLIST_FILE: NO
+        CODE_SIGN_ENTITLEMENTS: App/Resources/Moja.entitlements
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        COMBINE_HIDPI_IMAGES: YES
+        ENABLE_PREVIEWS: YES
+
+schemes:
+  Moja:
+    build:
+      targets:
+        Moja: all
+    run:
+      config: Debug
+    archive:
+      config: Release
