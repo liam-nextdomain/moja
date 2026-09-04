@@ -254,6 +254,55 @@ final class AppModel: ObservableObject {
         }
     }
 
+    // MARK: - 일괄 변환 (FR-6)
+
+    /// 폴더 하나를 골라 기존 항목을 한 번에 변환한다.
+    ///
+    /// 변환하는 동안 그 폴더의 실시간 감시를 멈춘다. 켜 두면 우리가 바꾸는 이름마다
+    /// 이벤트가 돌아와 같은 일을 두 번 하려 든다.
+    func showBatchPreview(for folderID: UUID) {
+        guard let status = statuses.first(where: { $0.id == folderID }) else { return }
+
+        suspendWatcher(folderID)
+
+        let session = BatchSession(
+            root: status.folder.path,
+            folderName: status.name,
+            queue: fileQueue,
+            renamer: Renamer(volumes: volumes),
+            onFinish: { [weak self] results in
+                Task { @MainActor in
+                    guard let self else { return }
+                    self.log.record(results)
+                    self.recentEntries = self.log.recent
+                }
+            },
+            onClose: { [weak self] in
+                Task { @MainActor in
+                    guard let self else { return }
+                    self.presenter.close(id: Self.batchWindowID(folderID))
+                    self.syncWatchers()   // 감시 재개
+                }
+            }
+        )
+
+        log.note("일괄 변환을 시작했습니다: \(status.folder.path)")
+        presenter.show(id: Self.batchWindowID(folderID),
+                       title: "기존 항목 일괄 변환",
+                       size: CGSize(width: 560, height: 440)) {
+            BatchPreviewView(session: session)
+        }
+        session.scan()
+    }
+
+    private static func batchWindowID(_ id: UUID) -> String { "batch-\(id.uuidString)" }
+
+    /// 일괄 변환 중에만 쓰는 일시 중지. 설정의 일시정지 상태는 건드리지 않는다.
+    private func suspendWatcher(_ id: UUID) {
+        watchers[id]?.stop()
+        watchers[id] = nil
+    }
+
     func showHistory() {
         recentEntries = log.recent
         presenter.show(id: "history", title: "최근 변환 내역", size: CGSize(width: 560, height: 420)) {

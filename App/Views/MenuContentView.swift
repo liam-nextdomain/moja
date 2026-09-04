@@ -20,6 +20,7 @@ struct MenuContentView: View {
 
         Divider()
 
+        batchMenu
         Button("최근 변환 내역…") { model.showHistory() }
 
         Divider()
@@ -40,6 +41,20 @@ struct MenuContentView: View {
         Button("도움말 / 정보") { model.showHelp() }
         Button("모자 종료") { model.quit() }
             .keyboardShortcut("q")
+    }
+
+    /// 폴더를 골라 기존 항목을 한 번에 변환한다 (FR-6).
+    /// 연결이 끊긴 폴더는 고를 수 없다.
+    @ViewBuilder
+    private var batchMenu: some View {
+        let available = model.statuses.filter { $0.condition != .disconnected }
+        if !available.isEmpty {
+            Menu("기존 항목 일괄 변환") {
+                ForEach(available) { status in
+                    Button(status.name) { model.showBatchPreview(for: status.id) }
+                }
+            }
+        }
     }
 
     /// 폴더별 켜기/끄기. 문제가 있는 폴더는 이름 옆에 이유를 적는다.

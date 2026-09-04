@@ -40,7 +40,7 @@ public enum RenameResult: Equatable, Sendable {
 ///
 /// 실측 근거는 `docs/rename-measurements.md`. APFS에서는 1번이 바로 성공하며
 /// 저장 바이트가 NFC로 바뀐다.
-public struct Renamer {
+public struct Renamer: Sendable {
 
     private let volumes: VolumeCapabilities
     private let forceTwoStepFallback: Bool

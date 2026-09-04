@@ -21,7 +21,9 @@ public enum VolumeSupport: Equatable, Sendable {
 ///
 /// 검사는 **이름 변경 검증이 실패했을 때만** 한다. 정상 동작하는 볼륨(APFS)에서는
 /// 검사 파일이 하나도 만들어지지 않는다.
-public final class VolumeCapabilities {
+///
+/// 여러 큐에서 함께 써도 된다. 유일한 가변 상태인 캐시는 잠금으로 지킨다.
+public final class VolumeCapabilities: @unchecked Sendable {
 
     private var cache: [dev_t: VolumeSupport] = [:]
     private let lock = NSLock()

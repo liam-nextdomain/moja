@@ -56,6 +56,9 @@ public struct Conversion: Equatable, Sendable {
     /// 바꿀 이름 (NFC).
     public let newName: String
 
+    /// 지금 디스크에 적혀 있는 이름. 미리보기의 "바뀌기 전" 칸에 쓴다.
+    public var currentName: String { PathTools.lastComponent(of: path) }
+
     public var newPath: String {
         guard let slash = path.lastIndex(of: "/") else { return newName }
         return String(path[...slash]) + newName
