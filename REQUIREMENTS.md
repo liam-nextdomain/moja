@@ -334,27 +334,58 @@ touch "$(printf '한글 문서.txt' | iconv -f utf-8 -t utf-8-mac)"
 
 문서와 다르게 구현한 곳과 그 이유. 작업 지시 10번의 기록이다.
 
-### 12.1 FR-3 — `rename(2)`를 1순위로 두지 않는다 ⚠️ 안전
+### 12.1 FR-3 — `renamex_np(RENAME_EXCL)`을 1순위로 둔다
 
-FR-3은 `rename(2)` 직접 호출을 1순위로 지정했다. 그대로 따르면 **데이터 손실 경로가 열린다**:
-`rename(2)`는 목적지가 이미 존재하면 **조용히 덮어쓴다**.
+실측 결과는 [docs/rename-measurements.md](docs/rename-measurements.md)에 있다.
+FR-3의 전제는 **성립한다**: APFS에서 `rename(2)`는 디스크에 저장된 바이트를 실제로
+NFD → NFC로 바꾼다.
 
-APFS는 정규화를 무시하므로 NFD 원본과 NFC 목적지가 같은 파일이고, 이때는 무해하다.
-그러나 **exFAT·SMB·NFS는 정규화를 구분**해서 NFD `한글.txt`와 NFC `한글.txt`가
-**서로 다른 파일로 공존**할 수 있다. 이 볼륨에서 `rename(2)`를 호출하면 사용자의
-멀쩡한 파일 하나가 사라진다. USB 메모리(exFAT)는 T16 시나리오에 직접 등장한다.
+다만 1순위를 `renamex_np(src, dst, RENAME_EXCL)`로 바꾼다. 측정해 보니 정규화 무시
+볼륨에서도 `EEXIST` 없이 바로 성공하며 저장 바이트가 NFC로 바뀐다. `rename(2)`와
+동작·성능이 같으면서, 목적지가 진짜 다른 파일일 때 덮어쓰지 않는다는 보장이 붙는다.
 
-바뀐 순서:
+```
+1. renamex_np(src, dst, RENAME_EXCL)
+   ├─ 성공        → 5번 검증으로
+   ├─ ENOTSUP(45) → 드라이버 미지원(exFAT 등). 3번으로
+   └─ EEXIST(17)  → 3번으로
+2. (해당 없음)
+3. lstat(src)와 lstat(dst)의 (st_dev, st_ino) 비교
+   ├─ 같은 파일  → 정규화 무시 볼륨. rename(2)로 진행 (안전)
+   └─ 다른 파일  → 진짜 충돌. 중단하고 "충돌"로 기록. 절대 덮어쓰지 않는다
+4. 그래도 안 바뀌면 2단계 폴백: src → src + ".nfc-tmp-<uuid>" → dst
+5. 검증: 부모 디렉터리를 다시 열거해 저장된 원시 바이트가 NFC인지 확인
+```
 
-1. `lstat(src)`로 `(st_dev, st_ino)` 확보
-2. `renamex_np(src, dst, RENAME_EXCL)` — 목적지가 있으면 `EEXIST`로 실패. **덮어쓰지 않는다**
-3. `EEXIST`면 `lstat(dst)`와 비교
-   - `(dev, ino)` 같음 → 정규화 무시 볼륨의 동일 파일. 평범한 `rename(2)`로 진행 (안전)
-   - `(dev, ino)` 다름 → 진짜 충돌. **중단하고 기록.** 건드리지 않는다
-4. 2단계 폴백: `src → src + ".nfc-tmp-<uuid>" → NFC 이름` (양쪽 `RENAME_EXCL`)
-5. 검증: `opendir`/`readdir`로 `d_name` **원시 바이트**를 확인 (`FileManager`의 String을 거치지 않음)
+3번의 "다른 파일" 분기는 로컬 볼륨(APFS·HFS+·exFAT) 어디서도 발생하지 않았다.
+그래도 남긴다 — SMB/NFS를 측정하지 못했고, 비용은 `lstat` 한 번이며, 틀렸을 때
+잃는 것이 사용자 파일이다.
 
-5장 "확신이 없으면 바꾸지 않는다"의 직접 적용이다.
+**계획 단계의 오판 정정**: exFAT을 "정규화 구분" 볼륨으로 보고 `rename(2)`가 공존하는
+상대 파일을 덮어쓴다고 판단했으나, 실측 결과 macOS의 exFAT 드라이버는 정규화를
+무시하고 NFD를 강제하므로 공존 자체가 불가능하다.
+
+### 12.1a FR-3 검증 방법 — 읽기는 Foundation을 써도 된다
+
+FR-3이 지정한 `FileManager.contentsOfDirectory` 기반 검증은 **유효하다**. 열거 API는
+디스크의 바이트를 그대로 보존한다 (비교는 `==`가 아니라 바이트로 해야 한다).
+
+반대로 **쓰기 방향의 Foundation은 쓸 수 없다**. `NSString.fileSystemRepresentation`과
+`URL.withUnsafeFileSystemRepresentation`이 경로를 **NFD로 분해**하기 때문에,
+`FileManager.moveItem(at:to:)`는 실패하는 게 아니라 **성공하면서 NFD를 쓴다**.
+FR-3이 POSIX 직접 호출을 지시한 진짜 이유가 이것이다.
+
+경로는 `String.withCString` 또는 `Array(name.utf8)`로 직접 만든다.
+
+### 12.1b 볼륨 능력 판별 (신규)
+
+HFS+와 exFAT은 커널이 이름을 NFD로 강제 변환해서 어떤 방법으로도 NFC 저장이
+불가능하다. 무한 재시도를 막기 위해 **볼륨당 1회 실측**한다: 대상 디렉터리에 NFC
+이름의 숨김 임시 파일을 만들어 저장 형태를 확인하고 즉시 지운 뒤, 결과를 `st_dev`
+기준으로 캐시한다. `f_fstypename` 문자열 판별은 SMB처럼 서버 구현에 좌우되는
+경우가 있어 쓰지 않는다.
+
+지원하지 않는 볼륨은 "이 디스크는 변환을 지원하지 않습니다"로 표시하고 건너뛴다.
 
 ### 12.2 FR-2 — 패키지 판별에 `NSWorkspace`를 쓰지 않는다
 
@@ -375,8 +406,15 @@ C 콜백 + 컨텍스트 포인터 구조라 strict concurrency와 정면으로 �
 "단일 직렬 큐 + 메인 액터" 모델을 `@MainActor` 규율로 직접 지키고, Swift 6 모드 전환은
 v1 릴리스 이후로 미룬다. 문서의 "Swift 5.9+" 요건은 만족한다.
 
-### 12.5 미검증 전제 — HFS+ 볼륨
+### 12.5 변환이 불가능한 볼륨 (측정 완료)
 
-**HFS+는 커널이 파일명을 강제로 NFD로 되돌린다.** 어떤 방법으로도 NFC 저장이 불가능하다.
-`statfs`의 `f_fstypename`으로 볼륨 타입을 확인해 "이 디스크는 변환을 지원하지 않습니다"로
-조용히 건너뛴다. 커밋 3에서 실측한다.
+**HFS+와 exFAT은 커널이 파일명을 강제로 NFD로 되돌린다.** NFC 이름으로 직접 생성해도
+NFD로 저장되므로 어떤 rename 전략으로도 불가능하다. 12.1b의 볼륨 능력 판별로 걸러
+"이 디스크는 변환을 지원하지 않습니다"로 표시하고 건너뛴다.
+
+이는 요구사항의 전송 경로 검증표 중 **USB 메모리(exFAT)** 항목에 직접 영향을 준다.
+NFC로 바뀐 파일을 exFAT USB에 복사하면 macOS가 다시 NFD로 저장한다. Moja가 고칠 수
+있는 문제가 아니므로 README의 한계 항목에 명시한다.
+
+SMB·NFS·클라우드 동기화 폴더는 아직 측정하지 못했다. `scripts/probe-volume.swift`에
+경로를 넘기면 같은 표를 만들 수 있다. 커밋 7에서 수행한다.
