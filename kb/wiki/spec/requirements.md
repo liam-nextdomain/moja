@@ -241,8 +241,10 @@ tags: [requirements, v1, functional-spec, acceptance-criteria, menu-bar-app, kor
 종료
 ```
 
-- 아이콘: SF Symbol 사용 (예: `textformat.abc` 또는 `character.textbox.ko`).
-  감시 중 = 기본, 일시정지 = 반투명, 오류 있음 = 작은 배지.
+- 아이콘: SF Symbol `hat.widebrim`. macOS 15부터 있는 심볼이라 13·14에서는
+  `graduationcap`으로 내려간다.
+  감시 중 = 기본, 일시정지 = 반투명, 오류 있음 = 작은 배지
+  (모자 계열에는 배지 변형이 없어 오른쪽 아래 느낌표를 직접 합성한다).
 - Dock 아이콘은 표시하지 않는다 (`LSUIElement = true`).
 
 ### FR-8. 첫 실행 온보딩 (필수)
