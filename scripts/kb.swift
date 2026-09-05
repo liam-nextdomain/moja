@@ -1277,6 +1277,7 @@ func gitDiff(_ path: String) -> String {
 }
 
 private let DIFF_HEAD_RE = Rx("^[+-](#{1,3}[ \t]+.+)$")
+private let HUNK_RE = Rx("^@@ -[0-9]+(?:,[0-9]+)? \\+([0-9]+)")
 private let HEAD_NUM_RE = Rx("^#{1,3}[ \t]+([0-9]+(?:\\.[0-9]+)*[a-z]?)[.:]?[ \t]")
 private let HEAD_SYM_RE = Rx("^#{1,3}[ \t]+((?:FR|NFR|T)-?[0-9]{1,2}[a-z]?)[.:]")
 
@@ -1292,18 +1293,42 @@ func cmdImpact(_ rawPath: String) {
 
     let diff = gitDiff(rel)
     var added = Set<String>(), removed = Set<String>()
+    var touchedLines = Set<Int>()
+    var newLine = 0
     for line in splitLines(diff) {
-        guard !line.hasPrefix("+++"), !line.hasPrefix("---"), let c = DIFF_HEAD_RE.first(line) else { continue }
-        if line.hasPrefix("+") { added.insert(c[1]) } else { removed.insert(c[1]) }
+        if let c = HUNK_RE.first(line) { newLine = Int(c[1]) ?? 0; continue }
+        guard !line.hasPrefix("+++"), !line.hasPrefix("---") else { continue }
+        if line.hasPrefix("+") {
+            if let c = DIFF_HEAD_RE.first(line) { added.insert(c[1]) }
+            touchedLines.insert(newLine)
+            newLine += 1
+        } else if line.hasPrefix("-") {
+            if let c = DIFF_HEAD_RE.first(line) { removed.insert(c[1]) }
+            // 지워진 줄은 새 파일에 없다. 그 자리를 바뀐 것으로 본다.
+            touchedLines.insert(newLine)
+        } else if newLine > 0 {
+            newLine += 1
+        }
     }
-    let changed = added.union(removed).sorted()
-    let structural = !added.symmetricDifference(removed).isEmpty && (added.count != removed.count)
+    let structural = !added.symmetricDifference(removed).isEmpty
 
-    var changedNums = Set<String>(), changedSyms = Set<String>()
-    for h in changed {
+    // 바뀐 줄이 어느 절에 떨어지는지 본다. 제목이 바뀐 것만 보면 본문만 고친 편집을 놓친다.
+    let index = loadSections()
+    var changedIds: [String] = [], changedNums = Set<String>(), changedSyms = Set<String>()
+    for s in index.sections {
+        guard let sid = s["id"] as? String, sid.hasPrefix(docId + "#"),
+              let a = s["line_start"] as? Int, let b = s["line_end"] as? Int,
+              touchedLines.contains(where: { $0 >= a && $0 <= b }) else { continue }
+        changedIds.append(sid)
+        if let n = s["num"] as? String { changedNums.insert(n) }
+        changedSyms.formUnion(s["symbols_declared"] as? [String] ?? [])
+    }
+    // 제목 자체가 생기거나 사라졌으면 줄 매핑으로는 못 잡으므로 따로 더한다.
+    for h in added.union(removed) {
         if let c = HEAD_SYM_RE.first(h) { changedSyms.insert(c[1]) }
         if let c = HEAD_NUM_RE.first(h) { changedNums.insert(c[1]) }
     }
+    let changed = changedIds.sorted()
 
     // 하위 문서: 나를 parents로 가리키는 쪽
     var downstream: [J] = []
@@ -1314,19 +1339,32 @@ func cmdImpact(_ rawPath: String) {
                               ("referenced_sections", J.strs(e["sections"] as? [String] ?? []))]))
     }
 
-    // 코드: defines ⋈ implements
+    // 코드: defines ⋈ implements. 단, 이 문서가 정의한 엔티티 중 **바뀐 절의 본문에
+    // 실제로 등장하는** 것만 남긴다. 그러지 않으면 requirements를 한 글자만 고쳐도
+    // 그것이 정의한 스무 개 엔티티의 구현 파일이 전부 나와서 아무 정보가 되지 못한다.
     var myEntities = Set<String>()
     for e in graph.edges("defines") where (e["from"] as? String) == docId {
         if let t = e["to"] as? String { myEntities.insert(t) }
     }
+    var changedText = ""
+    if let fileText = readFile(PROJECT_ROOT + "/" + rel) {
+        let ls = splitLines(fileText)
+        for n in touchedLines.sorted() where n >= 1 && n <= ls.count { changedText += ls[n - 1] + "\n" }
+    }
+    let changedLower = changedText.lowercased()
+    var relevantEntities = Set<String>()
+    for name in myEntities {
+        let surfaces = [name.lowercased(), name.replacingOccurrences(of: "-", with: " ").lowercased()]
+        if surfaces.contains(where: { changedLower.contains($0) }) { relevantEntities.insert(name) }
+    }
     var codeImpacts: [J] = []
     for e in graph.edges("implements") {
-        guard let ent = e["to"] as? String, myEntities.contains(ent), let p = e["from"] as? String else { continue }
+        guard let ent = e["to"] as? String, relevantEntities.contains(ent),
+              let p = e["from"] as? String else { continue }
         codeImpacts.append(.o([("path", .s(p)), ("entity", .s(ent))]))
     }
 
     // 심볼: 바뀐 절이 선언한 심볼과 그것을 인용하는 코드. 가장 실용적인 출력이다.
-    let index = loadSections()
     var symbolImpacts: [J] = []
     for sym in index.symbols {
         guard let id = sym["id"] as? String, let dec = sym["declared_in"] as? String,
