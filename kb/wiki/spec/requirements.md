@@ -2,7 +2,7 @@
 id: requirements
 title: "macOS 한글 파일명 자동 NFC 변환 메뉴바 앱: v1 요구사항"
 type: requirements
-version: "1.0"
+version: "1.1"
 date: "2026-09-05"
 parents: []
 entities:
@@ -96,9 +96,9 @@ tags: [requirements, v1, functional-spec, acceptance-criteria, menu-bar-app, kor
 
 # macOS 한글 파일명 자동 NFC 변환 메뉴바 앱: v1 요구사항
 
-> 이 문서는 Claude Code에 그대로 전달하는 용도로 작성되었다.
-> Claude Code는 이 문서를 프로젝트 루트의 `REQUIREMENTS.md`로 저장한 뒤,
-> 마지막 장 "작업 지시"의 순서대로 진행한다.
+> 이 문서는 Claude Code에 그대로 전달하는 용도로 작성되었고, 11장 "작업 지시"의 순서대로
+> v0.1.0까지 구현되었다. 처음에는 저장소 뿌리의 `REQUIREMENTS.md`였고 지금 자리로 옮겼다.
+> 구현이 이 문서와 달라진 지점은 12장에 적어 두었다.
 
 ---
 
