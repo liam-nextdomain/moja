@@ -48,6 +48,8 @@ let PROGRESS_DIR = PROJECT_ROOT + "/.claude/progress"
 let ROADMAP_PATH = PROGRESS_DIR + "/roadmap.md"
 let TASKS_PATH = PROGRESS_DIR + "/graph_tasks.json"
 let IMPACT_PATH = PROGRESS_DIR + "/impact-report.json"
+/// 번역 지시서. 지식이 아니라 다음 턴의 할 일이라 impact-report.json과 같은 자리에 둔다.
+let SYNC_PATH = PROGRESS_DIR + "/sync-manifest.json"
 
 /// implements 엣지를 찾을 때 훑는 곳. 테스트는 엔티티를 구현하지 않고 인용만 한다.
 let CODE_ROOTS = ["App", "CoreKit/Sources", "scripts"]
@@ -1471,22 +1473,23 @@ private let HUNK_RE = Rx("^@@ -[0-9]+(?:,[0-9]+)? \\+([0-9]+)")
 private let HEAD_NUM_RE = Rx("^#{1,3}[ \t]+([0-9]+(?:\\.[0-9]+)*[a-z]?)[.:]?[ \t]")
 private let HEAD_SYM_RE = Rx("^#{1,3}[ \t]+((?:FR|NFR|T)-?[0-9]{1,2}[a-z]?)[.:]")
 
-func cmdImpact(_ rawPath: String) {
-    var rel = relPath(rawPath.hasPrefix("/") ? rawPath : PROJECT_ROOT + "/" + rawPath, from: PROJECT_ROOT)
-    if rel.hasPrefix("./") { rel = String(rel.dropFirst(2)) }
-    // 장치(index.md·log.md)는 문서가 아니다. 예전에는 문서 노드를 못 찾아 우연히 돌아갔을 뿐이다.
-    guard let f = wikiFile(repoRel: rel), f.role != .apparatus else { return }
+/// git diff 한 번을 훑어 바뀐 새-파일 줄 번호와 추가·삭제된 제목을 낸다.
+/// cmdImpact와 cmdSync가 같은 답을 봐야 해서 함수로 뺐다. 둘이 각자 diff를 해석하면
+/// "바뀐 절"과 "번역할 절"이 한쪽만 고쳤을 때 조용히 어긋난다.
+struct DocDiff {
+    let touchedLines: Set<Int>
+    let addedHeads: Set<String>
+    let removedHeads: Set<String>
+    var isEmpty: Bool { touchedLines.isEmpty && addedHeads.isEmpty && removedHeads.isEmpty }
+    /// 제목이 생기거나 사라졌는가. 절 단위 대응이 무너지는 경우다.
+    var structural: Bool { !addedHeads.symmetricDifference(removedHeads).isEmpty }
+}
 
-    let graph = loadGraph()
-    let wikiRel = f.wikiRel
-    guard let node = graph.nodes(ofType: "document").first(where: { ($0["path"] as? String) == wikiRel }),
-          let docId = node["id"] as? String else { return }
-
-    let diff = gitDiff(rel)
+func scanDocDiff(_ rel: String) -> DocDiff {
     var added = Set<String>(), removed = Set<String>()
     var touchedLines = Set<Int>()
     var newLine = 0
-    for line in splitLines(diff) {
+    for line in splitLines(gitDiff(rel)) {
         if let c = HUNK_RE.first(line) { newLine = Int(c[1]) ?? 0; continue }
         guard !line.hasPrefix("+++"), !line.hasPrefix("---") else { continue }
         if line.hasPrefix("+") {
@@ -1501,7 +1504,24 @@ func cmdImpact(_ rawPath: String) {
             newLine += 1
         }
     }
-    let structural = !added.symmetricDifference(removed).isEmpty
+    return DocDiff(touchedLines: touchedLines, addedHeads: added, removedHeads: removed)
+}
+
+func cmdImpact(_ rawPath: String) {
+    var rel = relPath(rawPath.hasPrefix("/") ? rawPath : PROJECT_ROOT + "/" + rawPath, from: PROJECT_ROOT)
+    if rel.hasPrefix("./") { rel = String(rel.dropFirst(2)) }
+    // 장치(index.md·log.md)는 문서가 아니다. 예전에는 문서 노드를 못 찾아 우연히 돌아갔을 뿐이다.
+    guard let f = wikiFile(repoRel: rel), f.role != .apparatus else { return }
+
+    let graph = loadGraph()
+    let wikiRel = f.wikiRel
+    guard let node = graph.nodes(ofType: "document").first(where: { ($0["path"] as? String) == wikiRel }),
+          let docId = node["id"] as? String else { return }
+
+    let dd = scanDocDiff(rel)
+    let added = dd.addedHeads, removed = dd.removedHeads
+    let touchedLines = dd.touchedLines
+    let structural = dd.structural
 
     // 바뀐 줄이 어느 절에 떨어지는지 본다. 제목이 바뀐 것만 보면 본문만 고친 편집을 놓친다.
     let index = loadSections()
@@ -1596,6 +1616,102 @@ func cmdImpact(_ rawPath: String) {
 
     print("doc-impact: \(docId) → 하위 문서 \(downstream.count)개, 코드 \(codeImpacts.count)개, "
         + "심볼 \(symbolImpacts.count)개, 로드맵 \(roadmapImpacts.count)개")
+}
+
+// MARK: - 번역 지시서
+
+/// 매니페스트를 조립한다. I/O와 떼어 놓아야 selftest가 모양을 고정할 수 있다.
+func syncManifest(source: String, sourceVersion: String,
+                  target: String, targetExists: Bool, targetVersion: String,
+                  mode: String, structural: Bool,
+                  preambleChanged: Bool, preambleLines: [Int],
+                  sections: [(num: String, heading: String, start: Int, end: Int)]) -> J {
+    .o([
+        ("source", .s(source)), ("source_version", .s(sourceVersion)),
+        ("target", .s(target)), ("target_exists", .b(targetExists)),
+        ("target_version", .s(targetVersion)),
+        ("mode", .s(mode)), ("structural_change", .b(structural)),
+        ("preamble_changed", .b(preambleChanged)),
+        ("preamble_lines", .a(preambleLines.map { J.i($0) })),
+        ("changed_sections", .a(sections.map { s in
+            J.o([("num", .s(s.num)), ("heading", .s(s.heading)),
+                 ("source_lines", .a([.i(s.start), .i(s.end)]))])
+        })),
+    ])
+}
+
+/// 정본이 바뀌었을 때 무엇을 번역해야 하는지 적어 둔다.
+///
+/// 그래프를 읽지 않는다. 정본은 색인 대상이 아니므로 절의 줄 범위를 정본에서 직접 뜬다.
+/// 대상 파일의 줄 번호는 넣지 않는다. 번역본은 정본과 줄이 어긋나 있고, 낡은 줄 번호를
+/// 가리키는 것은 아무것도 안 가리키는 것보다 나쁘다. 대신 절 번호를 준다.
+///
+/// 시작할 때 기존 매니페스트를 무조건 지운다. 그래야 낡은 지시서로 엉뚱한 절을 번역하는
+/// 사고가 원천적으로 없다. k_teacher는 이 삭제를 에이전트의 책임으로 뒀는데 미덥지 않다.
+func cmdSync(_ rawPath: String) {
+    try? FileManager.default.removeItem(atPath: SYNC_PATH)
+
+    var rel = relPath(rawPath.hasPrefix("/") ? rawPath : PROJECT_ROOT + "/" + rawPath, from: PROJECT_ROOT)
+    if rel.hasPrefix("./") { rel = String(rel.dropFirst(2)) }
+    guard let f = wikiFile(repoRel: rel), f.role == .canonical else { return }
+
+    let abs = PROJECT_ROOT + "/" + rel
+    guard let text = readFile(abs) else { return }
+    let (fm, bodyStart) = parseFrontmatter(text: text, origin: rel)
+    let sourceVersion = fm?.str("version") ?? ""
+
+    let targetWiki = translationPath(ofCanonical: f.wikiRel)
+    let targetRel = "kb/wiki/" + targetWiki
+    let targetAbs = WIKI_DIR + "/" + targetWiki
+    let exists = FileManager.default.fileExists(atPath: targetAbs)
+    var targetVersion = ""
+    if exists, let t = readFile(targetAbs) {
+        targetVersion = parseFrontmatter(text: t, origin: targetRel).0?.str("version") ?? ""
+    }
+
+    let secs = parseSections(text: text, docId: fm?.str("id") ?? "x", path: f.wikiRel, bodyStart: bodyStart)
+
+    // 번역본이 없으면 전체를 번역해야 하므로 diff를 볼 것도 없다.
+    if !exists {
+        writeJSON(syncManifest(source: rel, sourceVersion: sourceVersion,
+                               target: targetRel, targetExists: false, targetVersion: "",
+                               mode: "create", structural: false,
+                               preambleChanged: true, preambleLines: [],
+                               sections: secs.compactMap { s in
+                                   s.num.map { (num: $0, heading: s.heading, start: s.lineStart, end: s.lineEnd) }
+                               }), to: SYNC_PATH)
+        print("doc-sync: \(f.wikiRel) → 번역본을 새로 만들어야 합니다 (\(secs.count)개 절)")
+        return
+    }
+
+    let dd = scanDocDiff(rel)
+    guard !dd.isEmpty else { return }
+
+    var changed: [(num: String, heading: String, start: Int, end: Int)] = []
+    for s in secs {
+        guard let n = s.num,
+              dd.touchedLines.contains(where: { $0 >= s.lineStart && $0 <= s.lineEnd }) else { continue }
+        changed.append((num: n, heading: s.heading, start: s.lineStart, end: s.lineEnd))
+    }
+
+    // parseSections는 bodyStart부터 첫 ## 까지의 머리말을 어느 절에도 넣지 않는다.
+    // 그래서 머리말만 고치면 changed_sections가 비어 번역할 것이 없다고 나온다.
+    let firstSectionLine = secs.first?.lineStart ?? Int.max
+    let preambleTouched = dd.touchedLines.filter { $0 < firstSectionLine }.sorted()
+    let preambleChanged = !preambleTouched.isEmpty
+
+    guard !changed.isEmpty || preambleChanged || dd.structural else { return }
+
+    // 구조가 바뀌면 절 단위 대응이 무너진다. 자동으로 진행하지 않고 사용자에게 묻는다.
+    let mode = dd.structural ? "full" : "sections"
+    writeJSON(syncManifest(source: rel, sourceVersion: sourceVersion,
+                           target: targetRel, targetExists: true, targetVersion: targetVersion,
+                           mode: mode, structural: dd.structural,
+                           preambleChanged: preambleChanged,
+                           preambleLines: preambleTouched.isEmpty ? [] : [preambleTouched.first!, preambleTouched.last!],
+                           sections: changed), to: SYNC_PATH)
+    print("doc-sync: \(f.wikiRel) → \(mode), 절 \(changed.count)개"
+        + (preambleChanged ? ", 머리말 포함" : ""))
 }
 
 // MARK: - 검사
@@ -1782,6 +1898,9 @@ func cmdHook() {
             return
         case .canonical:
             cmdBump(rel)
+            // bump 뒤여야 한다. 매니페스트의 source_version은 올라간 새 버전이어야 하고,
+            // 클로드가 번역을 마치고 번역본에 그 값을 적으면 신선도가 맞아떨어진다.
+            cmdSync(rel)
             // 번역본이 아직 없으면 이 정본이 색인 대상이다(loadDocs의 폴백). 그때는 예전처럼
             // 그래프와 영향을 여기서 돌려야 한다. 번역본이 생기면 그 일은 번역본 쪽으로 넘어간다.
             let tAbs = WIKI_DIR + "/" + translationPath(ofCanonical: f.wikiRel)
@@ -1999,6 +2118,42 @@ func cmdSelftest() -> Never {
     check("frontmatter: parents sections가 다르면 걸린다",
           frontmatterMismatches(canonical: ko, translation: enBad2).joined(separator: ";").contains("parents") ? "걸림" : "안 걸림", "걸림")
 
+    // 15. 번역 지시서의 모양. 대상 파일의 줄 번호가 들어가면 안 된다.
+    let manifest = syncManifest(source: "kb/wiki/spec/a.md", sourceVersion: "1.2",
+                                target: "kb/wiki/spec/a.en.md", targetExists: true, targetVersion: "1.1",
+                                mode: "sections", structural: false,
+                                preambleChanged: false, preambleLines: [],
+                                sections: [(num: "12.4a", heading: "제목", start: 507, end: 538)])
+    check("지시서: 모양", manifest.write(), """
+    {
+      "source": "kb/wiki/spec/a.md",
+      "source_version": "1.2",
+      "target": "kb/wiki/spec/a.en.md",
+      "target_exists": true,
+      "target_version": "1.1",
+      "mode": "sections",
+      "structural_change": false,
+      "preamble_changed": false,
+      "preamble_lines": [],
+      "changed_sections": [
+        {
+          "num": "12.4a",
+          "heading": "제목",
+          "source_lines": [
+            507,
+            538
+          ]
+        }
+      ]
+    }
+    """)
+
+    // 16. 제목이 생기거나 사라지면 구조 변경이다. 절 단위 대응이 무너진다.
+    check("diff: 구조 변경 판정",
+          String(DocDiff(touchedLines: [], addedHeads: ["## 새 절"], removedHeads: []).structural), "true")
+    check("diff: 문구만 바뀌면 구조 변경 아님",
+          String(DocDiff(touchedLines: [5], addedHeads: ["## 가"], removedHeads: ["## 가"]).structural), "false")
+
     print("\n\(pass + fail)건 중 \(pass) 통과, \(fail) 실패")
     exit(fail == 0 ? 0 : 1)
 }
@@ -2013,6 +2168,7 @@ let USAGE = """
   swift scripts/kb.swift impact <파일경로>      바뀐 문서의 파급 범위
   swift scripts/kb.swift check                 끊긴 참조가 있으면 exit 1
   swift scripts/kb.swift bump <파일경로>        프론트매터 버전 올리기
+  swift scripts/kb.swift sync <정본경로>        번역할 절을 지시서로 남긴다
   swift scripts/kb.swift selftest              파서 자체 검사
   swift scripts/kb.swift hook                  훅 payload를 stdin으로
 """
@@ -2026,6 +2182,9 @@ case "impact":
 case "bump":
     guard ARGS.count > 1 else { die(USAGE, 2) }
     cmdBump(ARGS[1])
+case "sync":
+    guard ARGS.count > 1 else { die(USAGE, 2) }
+    cmdSync(ARGS[1])
 case "check": cmdCheck()
 case "selftest": cmdSelftest()
 case "hook": cmdHook()
