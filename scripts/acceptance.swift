@@ -6,7 +6,7 @@
 // (앱이 MOJA_DEFAULTS_SUITE / MOJA_LOG_DIR 환경변수를 받는다).
 //
 // 파일 이름은 전부 바이트 단위로 다룬다. 셸의 글로빙은 이름을 조합형으로 정규화하기
-// 때문에 정규화 시험의 준비물로 쓸 수 없다 (docs/rename-measurements.md 2.4).
+// 때문에 정규화 시험의 준비물로 쓸 수 없다 (kb/wiki/research/rename-measurements.md 2.4).
 //
 // T13(재로그인)과 T15(24시간)는 사람과 시간이 필요해 여기서 하지 않는다.
 

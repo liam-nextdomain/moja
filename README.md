@@ -104,7 +104,7 @@
 커널 수준에서 강제로 분해해 저장합니다. 조합형 이름으로 직접 만들어도 분해형으로
 저장되므로, 어떤 방법으로도 바꿀 수 없습니다. 모자는 이런 디스크를 알아보고
 "지원하지 않습니다"로 표시한 뒤 건드리지 않습니다.
-자세한 측정 결과는 [docs/rename-measurements.md](docs/rename-measurements.md)에 있습니다.
+자세한 측정 결과는 [kb/wiki/research/rename-measurements.md](kb/wiki/research/rename-measurements.md)에 있습니다.
 
 ### 전송 경로 검증
 
@@ -188,8 +188,10 @@ CoreKit/   변환 로직                        순수 Foundation, UI 의존 없
            Renamer     이름 변경과 검증
            Watcher     FSEvents, 디바운스, 무시 목록
            Store       설정, 로그
-scripts/   빌드·테스트·릴리스·수용 검증·픽스처
-docs/      측정 기록, 수용 기준 결과
+scripts/   빌드·테스트·릴리스·수용 검증·픽스처·지식 베이스 도구
+kb/wiki/   요구사항, 측정 기록, 수용 결과                지식 그래프가 관계를 잇는다
+kb/raw/    외부 원자료 (볼륨 실측 출력, 참고 문헌)       쓴 뒤 고치지 않는다
+docs/images/ README 스크린샷
 ```
 
 ### 테스트 파일 만들기
@@ -203,13 +205,14 @@ docs/      측정 기록, 수용 기준 결과
 > **주의**: 파일 이름 시험을 셸로 준비하면 안 됩니다. zsh는 글로빙 결과를 조합형으로
 > 정규화하기 때문에, `cp staging/* watched/` 같은 명령은 분해형 이름을 조합형으로
 > **바꿔서** 복사합니다. 실제로 이 함정에 한 번 빠졌습니다
-> ([docs/rename-measurements.md](docs/rename-measurements.md) 2.4절).
+> ([kb/wiki/research/rename-measurements.md](kb/wiki/research/rename-measurements.md) 2.4절).
 
 ### 문서
 
-- [REQUIREMENTS.md](REQUIREMENTS.md): v1 요구사항과 구현이 문서와 달라진 지점
-- [docs/rename-measurements.md](docs/rename-measurements.md): 파일시스템별 실측 결과
-- [docs/acceptance-results.md](docs/acceptance-results.md): 수용 기준 검증 결과
+- [kb/wiki/spec/requirements.md](kb/wiki/spec/requirements.md): v1 요구사항과 구현이 문서와 달라진 지점
+- [kb/wiki/research/rename-measurements.md](kb/wiki/research/rename-measurements.md): 파일시스템별 실측 결과
+- [kb/wiki/spec/acceptance-results.md](kb/wiki/spec/acceptance-results.md): 수용 기준 검증 결과
+- [kb/wiki/index.md](kb/wiki/index.md): 지식 베이스 전체 색인
 
 ---
 

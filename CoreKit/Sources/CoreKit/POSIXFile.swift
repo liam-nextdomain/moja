@@ -20,7 +20,7 @@ public struct FileIdentity: Hashable, Sendable {
 ///
 /// 경로는 `String.withCString`으로만 만든다. Foundation의
 /// `fileSystemRepresentation`은 경로를 **NFD로 분해**하기 때문에, 그걸 쓰면
-/// NFC 이름을 아예 만들 수 없다 (`docs/rename-measurements.md` 3장).
+/// NFC 이름을 아예 만들 수 없다 (`kb/wiki/research/rename-measurements.md` 3장).
 ///
 /// 모든 함수는 성공 시 `0`, 실패 시 `errno`를 돌려준다.
 enum POSIXFile {

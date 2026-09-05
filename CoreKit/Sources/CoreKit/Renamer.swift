@@ -38,7 +38,7 @@ public enum RenameResult: Equatable, Sendable {
 /// 5. 그래도 아니면 볼륨 능력을 실측해 "지원 안 함"과 "일시적 실패"를 가른다
 /// ```
 ///
-/// 실측 근거는 `docs/rename-measurements.md`. APFS에서는 1번이 바로 성공하며
+/// 실측 근거는 `kb/wiki/research/rename-measurements.md`. APFS에서는 1번이 바로 성공하며
 /// 저장 바이트가 NFC로 바뀐다.
 public struct Renamer: Sendable {
 

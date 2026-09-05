@@ -14,7 +14,7 @@ public enum VolumeSupport: Equatable, Sendable {
 ///
 /// HFS+와 exFAT은 커널이 파일명을 강제로 NFD로 되돌린다. NFC 이름으로 직접
 /// 만들어도 NFD로 저장되므로 몇 번을 시도해도 성공할 수 없다
-/// (`docs/rename-measurements.md`). 무한 재시도를 막으려면 구분이 필요하다.
+/// (`kb/wiki/research/rename-measurements.md`). 무한 재시도를 막으려면 구분이 필요하다.
 ///
 /// `f_fstypename` 문자열로 거르지 않는다. SMB는 서버 구현에 따라 다르고,
 /// 드라이버 동작은 OS 판올림으로 바뀔 수 있다. 대신 볼륨당 한 번 직접 만들어 본다.

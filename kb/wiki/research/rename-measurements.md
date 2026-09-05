@@ -114,7 +114,7 @@ FR-3이 `rename(2)` 직접 호출을 지시한 진짜 이유가 이것이다. �
 
 ## 4. 설계에 반영할 것
 
-### 4.1 이름 변경 순서 (FR-3 / REQUIREMENTS 12.1 갱신)
+### 4.1 이름 변경 순서 (FR-3 / requirements 12.1 갱신)
 
 ```
 1. renamex_np(src, dst, RENAME_EXCL)

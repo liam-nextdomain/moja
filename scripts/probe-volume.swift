@@ -1,4 +1,4 @@
-// 볼륨의 정규화 성질을 측정한다. docs/rename-measurements.md의 표를 만든 스크립트.
+// 볼륨의 정규화 성질을 측정한다. kb/wiki/research/rename-measurements.md의 표를 만든 스크립트.
 //
 //   swift scripts/probe-volume.swift <디렉터리> [<디렉터리> ...]
 //

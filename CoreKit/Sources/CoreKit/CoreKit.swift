@@ -14,7 +14,7 @@ import Foundation
 ///
 /// ## 이 계층의 금지 사항
 ///
-/// 실측 결과(`docs/rename-measurements.md`)에 따라 다음을 쓰지 않는다.
+/// 실측 결과(`kb/wiki/research/rename-measurements.md`)에 따라 다음을 쓰지 않는다.
 /// - `FileManager.moveItem` / `createFile(atPath:)` — 경로를 NFD로 분해해 저장한다
 /// - `NSString.fileSystemRepresentation` / `URL.withUnsafeFileSystemRepresentation`
 /// - `String ==` 로 이름 비교 — 정규화를 무시한다. 항상 `Array(name.utf8)`로 비교한다

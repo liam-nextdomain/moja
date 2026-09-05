@@ -336,7 +336,7 @@ touch "$(printf '한글 문서.txt' | iconv -f utf-8 -t utf-8-mac)"
 
 ### 12.1 FR-3: `renamex_np(RENAME_EXCL)`을 1순위로 둔다
 
-실측 결과는 [docs/rename-measurements.md](docs/rename-measurements.md)에 있다.
+실측 결과는 [rename-measurements](../research/rename-measurements.md)에 있다.
 FR-3의 전제는 **성립한다**: APFS에서 `rename(2)`는 디스크에 저장된 바이트를 실제로
 NFD → NFC로 바꾼다.
 

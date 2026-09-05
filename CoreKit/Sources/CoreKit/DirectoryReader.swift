@@ -17,7 +17,7 @@ public struct DirectoryEntry: Equatable, Sendable {
 /// 디렉터리를 `readdir(3)`으로 직접 읽는다.
 ///
 /// `FileManager.contentsOfDirectory`도 저장된 바이트를 보존하는 것으로 실측됐지만
-/// (`docs/rename-measurements.md` 3장), 검증만큼은 String을 한 번도 거치지 않는
+/// (`kb/wiki/research/rename-measurements.md` 3장), 검증만큼은 String을 한 번도 거치지 않는
 /// 경로로 하고 싶어 직접 읽는다. 이름 변경이 실제로 먹혔는지 판단하는 마지막
 /// 관문이기 때문이다.
 public enum DirectoryReader {

@@ -68,7 +68,7 @@ swift scripts/acceptance.swift
 
 Windows 기기가 필요하다. 다만 관련해서 **확인된 제약**이 있다:
 macOS의 exFAT·HFS+ 드라이버는 파일 이름을 강제로 분해형으로 저장한다
-(`docs/rename-measurements.md`). 따라서 조합형으로 바꾼 파일을 exFAT USB에
+([rename-measurements](../research/rename-measurements.md)). 따라서 조합형으로 바꾼 파일을 exFAT USB에
 복사하면 macOS가 다시 분해형으로 되돌린다. **모자가 고칠 수 있는 문제가 아니다.**
 
 **해야 할 일**: 파인더 기본 압축(zip)으로 묶어 Windows에서 열어 확인한다.

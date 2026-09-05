@@ -8,7 +8,7 @@ public struct FileItem: Equatable, Sendable {
     /// 절대 경로. 디스크에 저장된 그대로의 바이트여야 한다 (정규화하지 않은 상태).
     public let path: String
     public let isDirectory: Bool
-    /// `URLResourceValues.isPackage`. `NSWorkspace`를 쓰지 않는 이유는 REQUIREMENTS 12.2.
+    /// `URLResourceValues.isPackage`. `NSWorkspace`를 쓰지 않는 이유는 kb/wiki/spec/requirements.md 12.2.
     public let isPackage: Bool
     public let modificationDate: Date
 

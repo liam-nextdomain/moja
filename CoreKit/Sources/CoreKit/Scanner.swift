@@ -72,7 +72,7 @@ public enum Scanner {
                         modificationDate: modificationDate(status))
     }
 
-    /// 번들인가. `NSWorkspace` 대신 Foundation의 자원 값을 쓴다 (REQUIREMENTS 12.2).
+    /// 번들인가. `NSWorkspace` 대신 Foundation의 자원 값을 쓴다 (kb/wiki/spec/requirements.md 12.2).
     ///
     /// 확장자로도 한 번 더 확인한다. 자원 값 조회는 실패할 수 있고, 실패했을 때
     /// "번들이 아니다"로 넘어가면 번들 내부로 들어가 버린다.

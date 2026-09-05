@@ -218,7 +218,7 @@ final class RenamerTests: XCTestCase {
     /// 목적지가 **다른 파일**이면 절대 진행하지 않는다.
     ///
     /// 로컬 볼륨(APFS·HFS+·exFAT)은 정규화를 무시해서 NFD·NFC 공존이 불가능하므로
-    /// 이 상황을 파일로 재현할 수 없다 (docs/rename-measurements.md). SMB·NFS는 미측정이다.
+    /// 이 상황을 파일로 재현할 수 없다 (kb/wiki/research/rename-measurements.md). SMB·NFS는 미측정이다.
     /// 그래서 판정 자체를 직접 검증한다.
     func testDifferentFileAtDestinationIsRefused() throws {
         let a = makeFile("\(root!)/a.txt")
