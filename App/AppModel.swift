@@ -27,7 +27,7 @@ struct FolderStatus: Identifiable, Equatable {
             case .watching, .off:              return nil
             case .disconnected:                return "연결 안 됨"
             case .overflowing:                 return "항목이 많습니다 — 일괄 변환을 사용하세요"
-            case .unsupported(let fileSystem): return "이 디스크(\(fileSystem))는 지원하지 않습니다"
+            case .unsupported(let fileSystem): return "이 디스크(\(fileSystem))는 변환을 지원하지 않습니다"
             }
         }
 

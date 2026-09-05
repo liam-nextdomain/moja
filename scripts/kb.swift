@@ -48,6 +48,8 @@ let PROGRESS_DIR = PROJECT_ROOT + "/.claude/progress"
 let ROADMAP_PATH = PROGRESS_DIR + "/roadmap.md"
 let TASKS_PATH = PROGRESS_DIR + "/graph_tasks.json"
 let IMPACT_PATH = PROGRESS_DIR + "/impact-report.json"
+/// 번역 지시서. 지식이 아니라 다음 턴의 할 일이라 impact-report.json과 같은 자리에 둔다.
+let SYNC_PATH = PROGRESS_DIR + "/sync-manifest.json"
 
 /// implements 엣지를 찾을 때 훑는 곳. 테스트는 엔티티를 구현하지 않고 인용만 한다.
 let CODE_ROOTS = ["App", "CoreKit/Sources", "scripts"]
@@ -69,6 +71,49 @@ let DOC_LABELS: [(String, String)] = [
     ("REQUIREMENTS", "requirements"), ("requirements", "requirements"), ("요구사항", "requirements"),
     ("rename-measurements", "rename-measurements"), ("acceptance-results", "acceptance-results"),
 ]
+
+// MARK: - 정본과 번역본
+
+/// 번역본을 알아보는 접미사. 언어를 늘리면 이 목록만 늘린다.
+/// 한국어가 정본이고 영어가 번역본이다. 사람은 정본을 쓰고 고치며, 클로드는 번역본을 읽는다.
+let TRANSLATION_SUFFIXES = [".en.md"]
+
+/// kb/wiki 안에서 파일이 맡은 역할.
+/// - canonical: 한국어 정본. 사람이 고친다. 버전의 주인이다.
+/// - translation: 영어 번역본. 클로드가 읽고 그래프가 색인한다.
+/// - apparatus: index.md와 log.md. 문서가 아니라 장치다.
+enum WikiRole { case canonical, translation, apparatus }
+
+/// kb/wiki 기준 상대 경로를 받는다. "spec/requirements.en.md" 처럼.
+func classifyWiki(_ wikiRel: String) -> WikiRole {
+    let name = wikiRel.contains("/") ? String(wikiRel.split(separator: "/").last!) : wikiRel
+    // 하위 폴더의 index.md도 장치로 본다. 예전에는 loadDocs가 최상위만 걸러서
+    // kb/wiki/spec/index.md가 그래프 문서가 되는데 훅은 그것을 장치로 보고 건너뛰었다.
+    if name == "index.md" || name == "log.md" { return .apparatus }
+    if TRANSLATION_SUFFIXES.contains(where: { name.hasSuffix($0) }) { return .translation }
+    return .canonical
+}
+
+/// 저장소 뿌리 기준 경로를 받아 kb/wiki 안의 마크다운이면 역할과 함께 준다.
+/// cmdBump·cmdImpact·cmdHook이 전부 뿌리 기준 경로를 다루므로 classifyWiki와 따로 둔다.
+func wikiFile(repoRel: String) -> (wikiRel: String, role: WikiRole)? {
+    guard repoRel.hasPrefix("kb/wiki/"), repoRel.hasSuffix(".md") else { return nil }
+    let wikiRel = String(repoRel.dropFirst("kb/wiki/".count))
+    return (wikiRel, classifyWiki(wikiRel))
+}
+
+/// 정본 → 번역본. "spec/requirements.md" → "spec/requirements.en.md"
+func translationPath(ofCanonical wikiRel: String) -> String {
+    String(wikiRel.dropLast(3)) + TRANSLATION_SUFFIXES[0]
+}
+
+/// 번역본 → 정본. 접미사가 안 붙어 있으면 nil.
+func canonicalPath(ofTranslation wikiRel: String) -> String? {
+    for s in TRANSLATION_SUFFIXES where wikiRel.hasSuffix(s) {
+        return String(wikiRel.dropLast(s.count)) + ".md"
+    }
+    return nil
+}
 
 let TODAY: String = {
     let f = DateFormatter()
@@ -176,6 +221,16 @@ struct Rx {
 
     func all(_ s: String) -> [[String]] {
         re.matches(in: s, range: full(s)).map { caps($0, s) }
+    }
+
+    /// 매치 전체가 차지한 자리까지 함께 준다. 여러 패턴을 같은 텍스트에 돌릴 때
+    /// 앞선 패턴이 이미 삼킨 자리를 뒤 패턴이 다시 잡지 않게 하려면 범위가 필요하다.
+    /// caps와 같은 이유로 Range(_:in:)를 거친다.
+    func allWithRange(_ s: String) -> [(caps: [String], range: Range<String.Index>)] {
+        re.matches(in: s, range: full(s)).compactMap { m in
+            guard let r = Range(m.range, in: s) else { return nil }
+            return (caps(m, s), r)
+        }
     }
 
     func matches(_ s: String) -> Bool { re.firstMatch(in: s, range: full(s)) != nil }
@@ -576,21 +631,52 @@ func annotateSymbols(_ sections: inout [Section]) {
 // MARK: - 상호 참조
 
 // 맨 N.N 은 이 저장소에서 소수(3.09초, 1.5초, 27.0)인 경우가 훨씬 많다.
-// 그래서 원본의 BARE_SECTION_RE를 버리고 단서가 붙은 세 형태만 본다.
-private let LABEL_REF_RE = Rx("(?<![A-Za-z0-9-])(REQUIREMENTS|requirements|요구사항|rename-measurements|acceptance-results)[ \t]*([0-9]{1,2}(?:\\.[0-9]+)*[a-z]?)(?:장|절)?")
+// 그래서 원본의 BARE_SECTION_RE를 버리고 단서가 붙은 형태만 본다. 영어 번역본에서는
+// 그 판단이 더 중요하다. macOS 13.4, Swift 6.3.3, v1.1이 전부 N.N 이기 때문이다.
+
+/// 이름표 목록을 DOC_LABELS에서 만든다. 예전에는 표와 패턴에 같은 목록이 따로 있어서,
+/// 문서를 하나 더 만들 때 한쪽만 고치면 그 문서로 가는 참조가 조용히 사라졌다.
+/// 긴 이름을 먼저 놓는다. ICU의 | 는 최장 일치가 아니라 왼쪽 우선이라, "requirements"가
+/// "requirements-v2"보다 앞서면 뒤엣것의 앞부분만 잘라 먹는다.
+/// DOC_LABELS(68) 뒤에 와야 한다. 스크립트 최상위 let은 소스 순서대로 실행된다.
+private let LABEL_REF_RE: Rx = {
+    let alts = DOC_LABELS.map { $0.0 }.sorted { $0.count > $1.count }
+        .map { NSRegularExpression.escapedPattern(for: $0) }.joined(separator: "|")
+    return Rx("(?<![A-Za-z0-9-])(" + alts + ")[ \t]*§?[ \t]*([0-9]{1,2}(?:\\.[0-9]+)*[a-z]?)(?:장|절)?")
+}()
 private let CHAPTER_REF_RE = Rx("(?<![0-9.])([0-9]{1,2})장")
 private let CUED_REF_RE = Rx("(?<![0-9.])([0-9]{1,2}(?:\\.[0-9]+)*[a-z]?)(?:절)?[ \t]*(?:참조|의[ \t])")
+/// 영어 번역본의 절 표기. § 는 이 코퍼스에 한 번도 나온 적이 없어 단서로 삼기에 안전하다.
+/// 영어 낱말 단서(see chapter 12)를 쓰지 않는 이유는 "see 12.1 seconds later" 같은 모양을
+/// 만들어 내기 때문이다.
+private let SIGIL_REF_RE = Rx("§[ \t]*([0-9]{1,2}(?:\\.[0-9]+)*[a-z]?)(?![0-9])")
 
 struct SectionRef { let toDoc: String; let num: String; let labelled: Bool }
 
+/// 이름표가 붙은 참조를 먼저 훑고, 그 자리를 나머지 패턴에서 뺀다.
+/// 그러지 않으면 "acceptance-results 2장"이 올바른 참조와 selfDoc#2 참조를 동시에 만든다.
+/// 없는 관계가 그래프에 들어가는 것이라, § 표기를 더하기 전에 반드시 고쳐야 했다.
 func findSectionRefs(text: String, selfDoc: String) -> [SectionRef] {
     var out: [SectionRef] = []
-    for c in LABEL_REF_RE.all(text) {
-        let doc = DOC_LABELS.first { $0.0 == c[1] }?.1 ?? selfDoc
-        out.append(SectionRef(toDoc: doc, num: c[2], labelled: true))
+    var claimed: [Range<String.Index>] = []
+    for m in LABEL_REF_RE.allWithRange(text) {
+        let doc = DOC_LABELS.first { $0.0 == m.caps[1] }?.1 ?? selfDoc
+        out.append(SectionRef(toDoc: doc, num: m.caps[2], labelled: true))
+        claimed.append(m.range)
     }
-    for c in CHAPTER_REF_RE.all(text) { out.append(SectionRef(toDoc: selfDoc, num: c[1], labelled: false)) }
-    for c in CUED_REF_RE.all(text) { out.append(SectionRef(toDoc: selfDoc, num: c[1], labelled: false)) }
+    func free(_ r: Range<String.Index>) -> Bool { !claimed.contains { $0.overlaps(r) } }
+    // § 는 이름표만큼 명시적이므로 labelled로 둔다. 이 깃발의 뜻은 "산문이 아니라 지시이므로
+    // 안 풀리면 결함"이고, cmdCheck가 그것을 오류로 올린다.
+    for m in SIGIL_REF_RE.allWithRange(text) where free(m.range) {
+        out.append(SectionRef(toDoc: selfDoc, num: m.caps[1], labelled: true))
+        claimed.append(m.range)
+    }
+    for m in CHAPTER_REF_RE.allWithRange(text) where free(m.range) {
+        out.append(SectionRef(toDoc: selfDoc, num: m.caps[1], labelled: false))
+    }
+    for m in CUED_REF_RE.allWithRange(text) where free(m.range) {
+        out.append(SectionRef(toDoc: selfDoc, num: m.caps[1], labelled: false))
+    }
     return out
 }
 
@@ -642,12 +728,36 @@ struct Doc {
     var sections: [Section] = []
 }
 
-/// kb/wiki 아래의 문서 전부. index.md와 log.md는 문서가 아니라 장치다.
-func loadDocs() -> [Doc] {
-    var out: [Doc] = []
+/// 그래프가 색인할 파일을 고른다. 짝이 있으면 번역본을, 없으면 정본을 싣는다.
+///
+/// 클로드가 읽는 것이 번역본이므로 색인 대상도 번역본이어야 한다. 그런데 짝마다 하나만
+/// 실어야 한다. 정본과 번역본이 같은 id를 갖는데 둘 다 실리면 buildGraph의
+/// Dictionary(uniqueKeysWithValues:)에서 죽는다.
+///
+/// 폴백이 있는 이유는 이관을 점진적으로 만들기 위해서다. 번역본이 없는 문서는 정본이
+/// 그대로 색인되므로 한 편씩 옮길 수 있다. 빠진 번역본은 cmdCheck가 크게 보고한다.
+func indexedWikiFiles() -> [(abs: String, rel: String)] {
+    var canonical: [String: String] = [:]      // wikiRel → abs
+    var translated: Set<String> = []           // 짝이 있는 정본의 wikiRel
+    var out: [(abs: String, rel: String)] = []
     for abs in walk(WIKI_DIR, ext: ".md") {
         let rel = relPath(abs, from: WIKI_DIR)
-        if rel == "index.md" || rel == "log.md" { continue }
+        switch classifyWiki(rel) {
+        case .apparatus: continue
+        case .canonical: canonical[rel] = abs
+        case .translation:
+            out.append((abs, rel))
+            if let c = canonicalPath(ofTranslation: rel) { translated.insert(c) }
+        }
+    }
+    for (rel, abs) in canonical where !translated.contains(rel) { out.append((abs, rel)) }
+    return out.sorted { $0.rel < $1.rel }
+}
+
+/// 색인 대상 문서 전부.
+func loadDocs() -> [Doc] {
+    var out: [Doc] = []
+    for (abs, rel) in indexedWikiFiles() {
         guard let text = readFile(abs) else { warn("읽지 못했습니다: \(rel)"); continue }
         let (fm, bodyStart) = parseFrontmatter(text: text, origin: "kb/wiki/" + rel)
         guard let fm else {
@@ -672,6 +782,86 @@ func loadDocs() -> [Doc] {
         out.append(d)
     }
     return out.sorted { $0.id < $1.id }
+}
+
+// MARK: - 짝 대조
+
+/// 정본 한 편과 그 번역본. Doc이 아닌 이유는 Doc의 모든 필드가 graph.json 노드의 속성이
+/// 되는데 여기서 필요한 것은 대조뿐이기 때문이다. 고아 번역본은 canonical이 비어 있다.
+struct WikiPair {
+    let canonical: String            // kb/wiki 기준. 고아면 ""
+    let translation: String          // kb/wiki 기준. 없으면 ""
+    let canonicalFM: FMMap?
+    let translationFM: FMMap?
+    let canonicalNums: [String]
+    let translationNums: [String]
+}
+
+private func readPairSide(_ wikiRel: String) -> (FMMap?, [String]) {
+    let abs = WIKI_DIR + "/" + wikiRel
+    guard let text = readFile(abs) else { return (nil, []) }
+    let (fm, bodyStart) = parseFrontmatter(text: text, origin: "kb/wiki/" + wikiRel)
+    let secs = parseSections(text: text, docId: "x", path: wikiRel, bodyStart: bodyStart)
+    return (fm, secs.compactMap { $0.num })
+}
+
+/// kb/wiki의 정본과 번역본을 짝지어 준다. 장치(index.md·log.md)는 빼고,
+/// 정본이 없는 번역본은 고아로 따로 담는다.
+func loadWikiPairs() -> [WikiPair] {
+    var canonicals: [String] = []
+    var translations: Set<String> = []
+    for abs in walk(WIKI_DIR, ext: ".md") {
+        let rel = relPath(abs, from: WIKI_DIR)
+        switch classifyWiki(rel) {
+        case .apparatus: continue
+        case .canonical: canonicals.append(rel)
+        case .translation: translations.insert(rel)
+        }
+    }
+    var out: [WikiPair] = []
+    for c in canonicals.sorted() {
+        let t = translationPath(ofCanonical: c)
+        let has = translations.contains(t)
+        if has { translations.remove(t) }
+        let (cfm, cnums) = readPairSide(c)
+        let (tfm, tnums) = has ? readPairSide(t) : (nil, [])
+        out.append(WikiPair(canonical: c, translation: has ? t : "",
+                            canonicalFM: cfm, translationFM: tfm,
+                            canonicalNums: cnums, translationNums: tnums))
+    }
+    for orphan in translations.sorted() {
+        let (tfm, tnums) = readPairSide(orphan)
+        out.append(WikiPair(canonical: "", translation: orphan,
+                            canonicalFM: nil, translationFM: tfm,
+                            canonicalNums: [], translationNums: tnums))
+    }
+    return out
+}
+
+/// 번역이 정본을 따라잡았는가. cmdCheck가 -> Never 라 검사할 수 없어서 판정만 뺐다.
+func translationStatus(sourceVersion: String, canonicalVersion: String) -> String {
+    if sourceVersion.isEmpty || canonicalVersion.isEmpty { return "unknown" }
+    return sourceVersion == canonicalVersion ? "ok" : "stale"
+}
+
+/// frontmatter의 구조 항목만 비교한다. title·note·definition은 언어가 달라 보지 않는다.
+/// 이 항목들이 어긋나면 번역본이 그래프에 넣는 관계가 정본이 정한 것과 달라진다.
+func frontmatterMismatches(canonical c: FMMap, translation t: FMMap) -> [String] {
+    var out: [String] = []
+    for key in ["id", "type", "date"] {
+        let a = c.str(key) ?? "", b = t.str(key) ?? ""
+        if a != b { out.append("\(key): 정본 \"\(a)\" ≠ 번역본 \"\(b)\"") }
+    }
+    func parentSig(_ m: FMMap) -> [String] {
+        m.maps("parents").map { "\($0.str("id") ?? "")|\($0.str("version") ?? "")|\($0.strs("sections").joined(separator: "+"))" }
+    }
+    func entitySig(_ m: FMMap) -> [String] {
+        m.maps("entities").map { "\($0.str("name") ?? "")|\($0.str("type") ?? "")|\($0.strs("code").joined(separator: "+"))" }
+    }
+    if parentSig(c) != parentSig(t) { out.append("parents가 다릅니다") }
+    if entitySig(c) != entitySig(t) { out.append("entities가 다릅니다 (이름·타입·code는 복제해야 합니다)") }
+    if c.strs("tags") != t.strs("tags") { out.append("tags가 다릅니다") }
+    return out
 }
 
 // MARK: - 코드 훑기
@@ -1078,6 +1268,39 @@ func runQuery(_ question: String, k: Int) -> (hits: [Hit], index: SectionIndex, 
         bodyOf[id] = ls[(a - 1)..<min(b, ls.count)].joined(separator: "\n")
     }
 
+    // 제목만 있고 본문이 없는 절은 읽을 것이 없다. 하위 절을 거느린 상위 절이 여기 해당한다.
+    // 한국어를 붙이기 **전에** 세야 한다. 붙인 뒤에 세면 빈 상위 절이 번역 본문 때문에
+    // 승격되어 읽을 것 없는 조각을 돌려준다.
+    let hasBody = Set(bodyOf.filter { _, body in
+        splitLines(body).dropFirst().contains { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
+    }.keys)
+
+    // 한국어 질의가 영어 색인에 걸리게 한다. 정본의 같은 번호 절 본문을 검색용 본문에만
+    // 덧붙인다. graph_sections.json에는 넣지 않는다. 그것은 git 추적 산출물이라 정본이
+    // 바뀔 때마다 요동치고, 줄 범위는 색인 대상 기준이어야 한다.
+    // 돌려주는 좌표는 언제나 번역본의 것이다. 클로드가 여는 것이 번역본이기 때문이다.
+    var koHeading: [String: String] = [:]
+    var koByPath: [String: [String: (heading: String, body: String)]] = [:]
+    for path in Set(index.sections.compactMap { $0["path"] as? String })
+    where classifyWiki(path) == .translation {
+        guard let cPath = canonicalPath(ofTranslation: path),
+              let text = readFile(WIKI_DIR + "/" + cPath) else { continue }
+        let (_, bodyStart) = parseFrontmatter(text: text, origin: cPath)
+        let ls = splitLines(text)
+        var m: [String: (heading: String, body: String)] = [:]
+        for s in parseSections(text: text, docId: "x", path: cPath, bodyStart: bodyStart) {
+            guard let num = s.num, s.lineStart >= 1, s.lineStart <= ls.count else { continue }
+            m[num] = (s.heading, ls[(s.lineStart - 1)..<min(s.lineEnd, ls.count)].joined(separator: "\n"))
+        }
+        koByPath[path] = m
+    }
+    for s in index.sections {
+        guard let id = s["id"] as? String, let path = s["path"] as? String,
+              let num = s["num"] as? String, let ko = koByPath[path]?[num] else { continue }
+        bodyOf[id] = (bodyOf[id] ?? "") + "\n" + ko.body
+        koHeading[id] = ko.heading
+    }
+
     let tokens = tokenize(question)
     let n = max(index.sections.count, 1)
     var scores: [String: Double] = [:]
@@ -1101,7 +1324,10 @@ func runQuery(_ question: String, k: Int) -> (hits: [Hit], index: SectionIndex, 
                 let norm = 1 - b + b * ((lengths[id] ?? avgLen) / avgLen)
                 scores[id, default: 0] += t.weight * idf * (f * (k1 + 1)) / (f + k1 * norm)
             }
-            if let h = s["heading"] as? String, h.lowercased().contains(t.text) {
+            // 제목 가산점은 양쪽 언어를 본다. 색인의 heading은 번역본의 것이라
+            // 한국어 질의어가 여기서 4배를 못 받는다.
+            let heads = [s["heading"] as? String, koHeading[id]].compactMap { $0 }
+            if heads.contains(where: { $0.lowercased().contains(t.text) }) {
                 scores[id, default: 0] += t.weight * 4.0 * idf
             }
         }
@@ -1158,11 +1384,6 @@ func runQuery(_ question: String, k: Int) -> (hits: [Hit], index: SectionIndex, 
         for (t, v) in targets { bonus[t, default: 0] += v }
     }
     for (id, b) in bonus { scores[id, default: 0] += b }
-
-    // 제목만 있고 본문이 없는 절은 읽을 것이 없다. 하위 절을 거느린 상위 절이 여기 해당한다.
-    let hasBody = Set(bodyOf.filter { _, body in
-        splitLines(body).dropFirst().contains { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
-    }.keys)
 
     let hits = scores.filter { $0.value > 0 && hasBody.contains($0.key) }
         .sorted { ($0.value, $1.key) > ($1.value, $0.key) }
@@ -1283,21 +1504,23 @@ private let HUNK_RE = Rx("^@@ -[0-9]+(?:,[0-9]+)? \\+([0-9]+)")
 private let HEAD_NUM_RE = Rx("^#{1,3}[ \t]+([0-9]+(?:\\.[0-9]+)*[a-z]?)[.:]?[ \t]")
 private let HEAD_SYM_RE = Rx("^#{1,3}[ \t]+((?:FR|NFR|T)-?[0-9]{1,2}[a-z]?)[.:]")
 
-func cmdImpact(_ rawPath: String) {
-    var rel = relPath(rawPath.hasPrefix("/") ? rawPath : PROJECT_ROOT + "/" + rawPath, from: PROJECT_ROOT)
-    if rel.hasPrefix("./") { rel = String(rel.dropFirst(2)) }
-    guard rel.hasPrefix("kb/wiki/"), rel.hasSuffix(".md") else { return }
+/// git diff 한 번을 훑어 바뀐 새-파일 줄 번호와 추가·삭제된 제목을 낸다.
+/// cmdImpact와 cmdSync가 같은 답을 봐야 해서 함수로 뺐다. 둘이 각자 diff를 해석하면
+/// "바뀐 절"과 "번역할 절"이 한쪽만 고쳤을 때 조용히 어긋난다.
+struct DocDiff {
+    let touchedLines: Set<Int>
+    let addedHeads: Set<String>
+    let removedHeads: Set<String>
+    var isEmpty: Bool { touchedLines.isEmpty && addedHeads.isEmpty && removedHeads.isEmpty }
+    /// 제목이 생기거나 사라졌는가. 절 단위 대응이 무너지는 경우다.
+    var structural: Bool { !addedHeads.symmetricDifference(removedHeads).isEmpty }
+}
 
-    let graph = loadGraph()
-    let wikiRel = String(rel.dropFirst("kb/wiki/".count))
-    guard let node = graph.nodes(ofType: "document").first(where: { ($0["path"] as? String) == wikiRel }),
-          let docId = node["id"] as? String else { return }
-
-    let diff = gitDiff(rel)
+func scanDocDiff(_ rel: String) -> DocDiff {
     var added = Set<String>(), removed = Set<String>()
     var touchedLines = Set<Int>()
     var newLine = 0
-    for line in splitLines(diff) {
+    for line in splitLines(gitDiff(rel)) {
         if let c = HUNK_RE.first(line) { newLine = Int(c[1]) ?? 0; continue }
         guard !line.hasPrefix("+++"), !line.hasPrefix("---") else { continue }
         if line.hasPrefix("+") {
@@ -1312,7 +1535,24 @@ func cmdImpact(_ rawPath: String) {
             newLine += 1
         }
     }
-    let structural = !added.symmetricDifference(removed).isEmpty
+    return DocDiff(touchedLines: touchedLines, addedHeads: added, removedHeads: removed)
+}
+
+func cmdImpact(_ rawPath: String) {
+    var rel = relPath(rawPath.hasPrefix("/") ? rawPath : PROJECT_ROOT + "/" + rawPath, from: PROJECT_ROOT)
+    if rel.hasPrefix("./") { rel = String(rel.dropFirst(2)) }
+    // 장치(index.md·log.md)는 문서가 아니다. 예전에는 문서 노드를 못 찾아 우연히 돌아갔을 뿐이다.
+    guard let f = wikiFile(repoRel: rel), f.role != .apparatus else { return }
+
+    let graph = loadGraph()
+    let wikiRel = f.wikiRel
+    guard let node = graph.nodes(ofType: "document").first(where: { ($0["path"] as? String) == wikiRel }),
+          let docId = node["id"] as? String else { return }
+
+    let dd = scanDocDiff(rel)
+    let added = dd.addedHeads, removed = dd.removedHeads
+    let touchedLines = dd.touchedLines
+    let structural = dd.structural
 
     // 바뀐 줄이 어느 절에 떨어지는지 본다. 제목이 바뀐 것만 보면 본문만 고친 편집을 놓친다.
     let index = loadSections()
@@ -1409,6 +1649,103 @@ func cmdImpact(_ rawPath: String) {
         + "심볼 \(symbolImpacts.count)개, 로드맵 \(roadmapImpacts.count)개")
 }
 
+// MARK: - 번역 지시서
+
+/// 매니페스트를 조립한다. I/O와 떼어 놓아야 selftest가 모양을 고정할 수 있다.
+func syncManifest(source: String, sourceVersion: String,
+                  target: String, targetExists: Bool, targetVersion: String,
+                  mode: String, structural: Bool,
+                  preambleChanged: Bool, preambleLines: [Int],
+                  sections: [(num: String, heading: String, start: Int, end: Int)]) -> J {
+    .o([
+        ("source", .s(source)), ("source_version", .s(sourceVersion)),
+        ("target", .s(target)), ("target_exists", .b(targetExists)),
+        ("target_version", .s(targetVersion)),
+        ("mode", .s(mode)), ("structural_change", .b(structural)),
+        ("preamble_changed", .b(preambleChanged)),
+        ("preamble_lines", .a(preambleLines.map { J.i($0) })),
+        ("changed_sections", .a(sections.map { s in
+            J.o([("num", .s(s.num)), ("heading", .s(s.heading)),
+                 ("source_lines", .a([.i(s.start), .i(s.end)]))])
+        })),
+    ])
+}
+
+/// 정본이 바뀌었을 때 무엇을 번역해야 하는지 적어 둔다.
+///
+/// 그래프를 읽지 않는다. 정본은 색인 대상이 아니므로 절의 줄 범위를 정본에서 직접 뜬다.
+/// 대상 파일의 줄 번호는 넣지 않는다. 번역본은 정본과 줄이 어긋나 있고, 낡은 줄 번호를
+/// 가리키는 것은 아무것도 안 가리키는 것보다 나쁘다. 대신 절 번호를 준다.
+///
+/// 시작할 때 기존 매니페스트를 무조건 지운다. 그래야 낡은 지시서로 엉뚱한 절을 번역하는
+/// 사고가 원천적으로 없다. k_teacher는 이 삭제를 에이전트의 책임으로 뒀는데 미덥지 않다.
+func cmdSync(_ rawPath: String) {
+    try? FileManager.default.removeItem(atPath: SYNC_PATH)
+
+    var rel = relPath(rawPath.hasPrefix("/") ? rawPath : PROJECT_ROOT + "/" + rawPath, from: PROJECT_ROOT)
+    if rel.hasPrefix("./") { rel = String(rel.dropFirst(2)) }
+    guard let f = wikiFile(repoRel: rel), f.role == .canonical else { return }
+
+    let abs = PROJECT_ROOT + "/" + rel
+    guard let text = readFile(abs) else { return }
+    let (fm, bodyStart) = parseFrontmatter(text: text, origin: rel)
+    let sourceVersion = fm?.str("version") ?? ""
+
+    let targetWiki = translationPath(ofCanonical: f.wikiRel)
+    let targetRel = "kb/wiki/" + targetWiki
+    let targetAbs = WIKI_DIR + "/" + targetWiki
+    let exists = FileManager.default.fileExists(atPath: targetAbs)
+    var targetVersion = ""
+    if exists, let t = readFile(targetAbs) {
+        targetVersion = parseFrontmatter(text: t, origin: targetRel).0?.str("version") ?? ""
+    }
+
+    let secs = parseSections(text: text, docId: fm?.str("id") ?? "x", path: f.wikiRel, bodyStart: bodyStart)
+
+    // 번역본이 없으면 전체를 번역해야 하므로 diff를 볼 것도 없다.
+    if !exists {
+        writeJSON(syncManifest(source: rel, sourceVersion: sourceVersion,
+                               target: targetRel, targetExists: false, targetVersion: "",
+                               mode: "create", structural: false,
+                               preambleChanged: true, preambleLines: [],
+                               sections: secs.compactMap { s in
+                                   s.num.map { (num: $0, heading: s.heading, start: s.lineStart, end: s.lineEnd) }
+                               }), to: SYNC_PATH)
+        print("doc-sync: \(f.wikiRel) → 번역본을 새로 만들어야 합니다 (\(secs.count)개 절)")
+        return
+    }
+
+    let dd = scanDocDiff(rel)
+    guard !dd.isEmpty else { return }
+
+    var changed: [(num: String, heading: String, start: Int, end: Int)] = []
+    for s in secs {
+        guard let n = s.num,
+              dd.touchedLines.contains(where: { $0 >= s.lineStart && $0 <= s.lineEnd }) else { continue }
+        changed.append((num: n, heading: s.heading, start: s.lineStart, end: s.lineEnd))
+    }
+
+    // parseSections는 bodyStart부터 첫 ## 까지의 머리말을 어느 절에도 넣지 않는다.
+    // 그래서 머리말만 고치면 changed_sections가 비어 번역할 것이 없다고 나온다.
+    // frontmatter는 머리말이 아니다. bodyStart 앞을 세면 버전 범프가 늘 머리말 변경으로 잡힌다.
+    let firstSectionLine = secs.first?.lineStart ?? Int.max
+    let preambleTouched = dd.touchedLines.filter { $0 >= bodyStart && $0 < firstSectionLine }.sorted()
+    let preambleChanged = !preambleTouched.isEmpty
+
+    guard !changed.isEmpty || preambleChanged || dd.structural else { return }
+
+    // 구조가 바뀌면 절 단위 대응이 무너진다. 자동으로 진행하지 않고 사용자에게 묻는다.
+    let mode = dd.structural ? "full" : "sections"
+    writeJSON(syncManifest(source: rel, sourceVersion: sourceVersion,
+                           target: targetRel, targetExists: true, targetVersion: targetVersion,
+                           mode: mode, structural: dd.structural,
+                           preambleChanged: preambleChanged,
+                           preambleLines: preambleTouched.isEmpty ? [] : [preambleTouched.first!, preambleTouched.last!],
+                           sections: changed), to: SYNC_PATH)
+    print("doc-sync: \(f.wikiRel) → \(mode), 절 \(changed.count)개"
+        + (preambleChanged ? ", 머리말 포함" : ""))
+}
+
 // MARK: - 검사
 
 func cmdCheck() -> Never {
@@ -1425,6 +1762,11 @@ func cmdCheck() -> Never {
             for p in e.strs("code") where !FileManager.default.fileExists(atPath: PROJECT_ROOT + "/" + p) {
                 problems.append("kb/wiki/\(d.path): 엔티티 `\(e.str("name") ?? "?")`의 code 경로가 없습니다: \(p)")
             }
+        }
+        // 번호 없는 제목은 슬러그로 id가 만들어져 언어에 묶인다. 그러면 정본과 번역본을
+        // 번호로 짝지을 수 없다. 매니페스트의 지목, 질의 붙이기, 구조 대조가 전부 번호에 걸려 있다.
+        for s in d.sections where s.num == nil {
+            problems.append("kb/wiki/\(d.path) \(s.id): 번호 없는 제목이라 짝을 지을 수 없습니다: \(s.heading)")
         }
     }
 
@@ -1454,6 +1796,41 @@ func cmdCheck() -> Never {
         }
     }
 
+    // 정본과 번역본의 짝. 클로드가 번역본을 읽으므로 번역이 밀리면 낡은 지식을 읽게 된다.
+    // 그것을 알아채는 자리가 여기뿐이라 경고가 아니라 오류로 올린다.
+    for p in loadWikiPairs() {
+        if p.canonical.isEmpty {
+            problems.append("kb/wiki/\(p.translation): 정본이 없는 번역본입니다")
+            continue
+        }
+        guard !p.translation.isEmpty else {
+            problems.append("kb/wiki/\(p.canonical): 영어 번역본이 없습니다 (\(translationPath(ofCanonical: p.canonical)))")
+            continue
+        }
+        let cv = p.canonicalFM?.str("version") ?? ""
+        let tv = p.translationFM?.str("version") ?? ""
+        switch translationStatus(sourceVersion: tv, canonicalVersion: cv) {
+        case "stale":
+            problems.append("kb/wiki/\(p.translation): 번역이 v\(tv)에 머물러 있습니다. 정본은 v\(cv)입니다")
+        case "unknown":
+            problems.append("kb/wiki/\(p.translation): version을 읽을 수 없습니다 (정본 \"\(cv)\", 번역본 \"\(tv)\")")
+        default: break
+        }
+        // 번호 집합이 어긋나면 번역 지시서의 절 지목과 질의 붙이기가 조용히 깨진다.
+        let cs = Set(p.canonicalNums), ts = Set(p.translationNums)
+        for n in cs.subtracting(ts).sorted() {
+            problems.append("kb/wiki/\(p.translation): 번역본에 없는 절입니다: \(n)")
+        }
+        for n in ts.subtracting(cs).sorted() {
+            problems.append("kb/wiki/\(p.translation): 정본에 없는 절입니다: \(n)")
+        }
+        if let c = p.canonicalFM, let t = p.translationFM {
+            for m in frontmatterMismatches(canonical: c, translation: t) {
+                problems.append("kb/wiki/\(p.translation): frontmatter가 정본과 다릅니다 — \(m)")
+            }
+        }
+    }
+
     if problems.isEmpty { print("✅ 끊긴 참조 없음 (문서 \(r.docs.count)개)"); exit(0) }
     for p in orderedUnique(problems) { print("❌ " + p) }
     print("\n\(orderedUnique(problems).count)건")
@@ -1466,10 +1843,14 @@ private let FM_VERSION_RE = Rx("^version:[ \t]*\"?([0-9]+)\\.([0-9]+)\"?[ \t]*$"
 
 /// frontmatter의 version만 올린다. 본문에는 버전 줄이 없고, 만들지도 않는다.
 /// parents[].version은 들여쓰여 있어서 열 0 앵커에 걸리지 않는다.
+///
+/// 정본에만 돈다. 버전의 주인은 정본 하나다. 번역본의 version은 번역할 때 정본의 값을
+/// 베껴 적으므로, 번역이 밀리면 두 값이 어긋나고 그것이 cmdCheck의 신선도 판정 근거가 된다.
+/// 번역본이 스스로 올리면 그 어긋남이 가려진다.
 func cmdBump(_ rawPath: String) {
     var rel = relPath(rawPath.hasPrefix("/") ? rawPath : PROJECT_ROOT + "/" + rawPath, from: PROJECT_ROOT)
     if rel.hasPrefix("./") { rel = String(rel.dropFirst(2)) }
-    guard rel.hasPrefix("kb/wiki/"), rel.hasSuffix(".md") else { return }
+    guard wikiFile(repoRel: rel)?.role == .canonical else { return }
     let abs = PROJECT_ROOT + "/" + rel
     guard let text = readFile(abs) else { return }
     let (fm, bodyStart) = parseFrontmatter(text: text, origin: rel)
@@ -1514,9 +1895,17 @@ func cmdBump(_ rawPath: String) {
 
 // MARK: - 훅
 
-/// 훅 payload를 stdin으로 받아 bump → build → impact 순서로 돈다.
-/// 순서가 중요하다. 버전 범프는 그래프가 frontmatter를 읽기 전에 끝나야 하고,
-/// 영향 분석은 다시 만들어진 그래프를 읽어야 한다. jq는 쓰지 않는다.
+/// 훅 payload를 stdin으로 받아 파일의 역할에 따라 갈라진다. jq는 쓰지 않는다.
+///
+/// 정본이 바뀌면 버전을 올리고 번역 지시서를 낸다. 그래프와 영향 분석은 건드리지 않는다.
+/// 번역본이 바뀌면 그래프를 다시 만들고 영향을 분석한다. 버전은 건드리지 않는다.
+///
+/// 이 분기가 연쇄를 없앤다. 정본 편집은 영향 보고를 내지 않고, 그 뒤에 클로드가 번역본을
+/// 고치면 그때 보고가 한 번만 나온다. k_teacher는 파생본이 그래프 문서라서 훅이 반드시 두 번
+/// 돌고 두 번째를 휴리스틱으로 무시하는데, 여기서는 역할 하나로 그 문제가 사라진다.
+///
+/// 순서는 여전히 중요하다. 버전 범프는 그래프가 frontmatter를 읽기 전에 끝나야 하고,
+/// 영향 분석은 다시 만들어진 그래프를 읽어야 한다.
 func cmdHook() {
     let data = FileHandle.standardInput.readDataToEndOfFile()
     guard let o = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return }
@@ -1528,18 +1917,37 @@ func cmdHook() {
     var rel = relPath(path.hasPrefix("/") ? path : PROJECT_ROOT + "/" + path, from: PROJECT_ROOT)
     if rel.hasPrefix("./") { rel = String(rel.dropFirst(2)) }
 
-    let isWikiDoc = rel.hasPrefix("kb/wiki/") && rel.hasSuffix(".md")
-        && !rel.hasSuffix("/index.md") && !rel.hasSuffix("/log.md")
-    let isCode = rel.hasSuffix(".swift")
-        && CITE_ROOTS.contains { rel.hasPrefix($0 + "/") }
-    guard isWikiDoc || isCode else { return }
+    func rebuild() {
+        let r = buildGraph(quiet: true)
+        writeJSON(r.graph, to: GRAPH_PATH)
+        writeJSON(r.sections, to: SECTIONS_PATH)
+        if let t = r.tasks { writeJSON(t, to: TASKS_PATH) }
+    }
 
-    if isWikiDoc { cmdBump(rel) }
-    let r = buildGraph(quiet: true)
-    writeJSON(r.graph, to: GRAPH_PATH)
-    writeJSON(r.sections, to: SECTIONS_PATH)
-    if let t = r.tasks { writeJSON(t, to: TASKS_PATH) }
-    if isWikiDoc { cmdImpact(rel) }
+    if let f = wikiFile(repoRel: rel) {
+        switch f.role {
+        case .apparatus:
+            return
+        case .canonical:
+            cmdBump(rel)
+            // bump 뒤여야 한다. 매니페스트의 source_version은 올라간 새 버전이어야 하고,
+            // 클로드가 번역을 마치고 번역본에 그 값을 적으면 신선도가 맞아떨어진다.
+            cmdSync(rel)
+            // 번역본이 아직 없으면 이 정본이 색인 대상이다(loadDocs의 폴백). 그때는 예전처럼
+            // 그래프와 영향을 여기서 돌려야 한다. 번역본이 생기면 그 일은 번역본 쪽으로 넘어간다.
+            let tAbs = WIKI_DIR + "/" + translationPath(ofCanonical: f.wikiRel)
+            if FileManager.default.fileExists(atPath: tAbs) { return }
+            rebuild()
+            cmdImpact(rel)
+        case .translation:
+            rebuild()
+            cmdImpact(rel)
+        }
+        return
+    }
+
+    guard rel.hasSuffix(".swift"), CITE_ROOTS.contains(where: { rel.hasPrefix($0 + "/") }) else { return }
+    rebuild()
 }
 
 // MARK: - 자체 검사
@@ -1666,6 +2074,118 @@ func cmdSelftest() -> Never {
     let secs = parseSections(text: ranged, docId: "x", path: "x.md", bodyStart: 4)
     check("절: 줄 범위", secs.map { "\($0.heading):\($0.lineStart)-\($0.lineEnd)" }.joined(separator: ","), "가:7-9,나:10-11")
 
+    // 11. 정본·번역본·장치의 구분
+    func role(_ p: String) -> String {
+        switch classifyWiki(p) {
+        case .canonical: return "canonical"
+        case .translation: return "translation"
+        case .apparatus: return "apparatus"
+        }
+    }
+    check("역할: 정본", role("spec/requirements.md"), "canonical")
+    check("역할: 번역본", role("spec/requirements.en.md"), "translation")
+    check("역할: 최상위 index", role("index.md"), "apparatus")
+    // 예전에는 loadDocs가 최상위만 걸러서 이것이 그래프 문서가 되는데 훅은 장치로 보고 건너뛰었다.
+    check("역할: 하위 폴더 index", role("spec/index.md"), "apparatus")
+    check("역할: 하위 폴더 log", role("spec/log.md"), "apparatus")
+    check("역할: 뿌리 기준 경로", wikiFile(repoRel: "kb/wiki/spec/a.en.md").map { "\($0.wikiRel)|\(role($0.wikiRel))" } ?? "nil",
+          "spec/a.en.md|translation")
+    check("역할: wiki 밖", wikiFile(repoRel: "README.md") == nil ? "nil" : "있음", "nil")
+    check("짝: 정본 → 번역본", translationPath(ofCanonical: "spec/requirements.md"), "spec/requirements.en.md")
+    check("짝: 왕복", canonicalPath(ofTranslation: translationPath(ofCanonical: "research/x.md")) ?? "nil", "research/x.md")
+    check("짝: 접미사 없으면 nil", canonicalPath(ofTranslation: "spec/x.md") ?? "nil", "nil")
+
+    // 12. 상호 참조. 한국어 표기가 살아 있는지, § 가 걸리는지, 이중 계상이 없는지.
+    func refs(_ t: String) -> String {
+        findSectionRefs(text: t, selfDoc: "requirements")
+            .map { "\($0.toDoc)#\($0.num)" }.joined(separator: ",")
+    }
+    check("참조: 이름표 + 장은 한 건", refs("acceptance-results 2장을 보라"), "acceptance-results#2")
+    check("참조: 한국어 이름표", refs("(요구사항 12.4a)"), "requirements#12.4a")
+    check("참조: 한국어 단서", refs("12.4a 참조"), "requirements#12.4a")
+    check("참조: 한국어 장", refs("7장 표에 반영"), "requirements#7")
+    check("참조: 시길", refs("see §12.4a"), "requirements#12.4a")
+    check("참조: 이름표 + 시길은 한 건", refs("requirements §12.1"), "requirements#12.1")
+    check("참조: 시길 두 개", refs("§12.1 and §12.1b"), "requirements#12.1,requirements#12.1b")
+    // 578-579의 판단은 영어에서 더 중요하다. 버전 번호가 전부 N.N 이다.
+    check("참조: 소수는 안 잡는다", refs("3.09 seconds"), "")
+    check("참조: 버전은 안 잡는다", refs("macOS 13.4 or later"), "")
+    check("참조: 시길은 labelled",
+          findSectionRefs(text: "§99.9", selfDoc: "requirements").first.map { String($0.labelled) } ?? "nil", "true")
+
+    // 13. 번역 신선도
+    check("신선도: 따라잡음", translationStatus(sourceVersion: "1.1", canonicalVersion: "1.1"), "ok")
+    check("신선도: 뒤처짐", translationStatus(sourceVersion: "1.0", canonicalVersion: "1.1"), "stale")
+    check("신선도: 읽을 수 없음", translationStatus(sourceVersion: "", canonicalVersion: "1.1"), "unknown")
+
+    // 14. frontmatter 대조. 산문은 언어가 다르므로 어긋나도 문제가 아니다.
+    let fmKo = """
+    id: requirements
+    type: requirements
+    date: "2026-09-06"
+    title: "한국어 제목"
+    parents:
+      - id: plan
+        version: "1.0"
+        sections: ["7", "12.4a"]
+        note: "한국어 설명"
+    entities:
+      - name: overflow-guard
+        type: mechanism
+        definition: "한국어 정의"
+        code: [App/A.swift]
+    tags: [a, b]
+    """
+    let fmEn = fmKo
+        .replacingOccurrences(of: "한국어 제목", with: "English title")
+        .replacingOccurrences(of: "한국어 설명", with: "English note")
+        .replacingOccurrences(of: "한국어 정의", with: "English definition")
+    let ko = parseFrontmatterLines(splitLines(fmKo), origin: "ko")!
+    let en = parseFrontmatterLines(splitLines(fmEn), origin: "en")!
+    check("frontmatter: 산문만 다르면 통과", frontmatterMismatches(canonical: ko, translation: en).count.description, "0")
+    let enBad = parseFrontmatterLines(splitLines(fmEn.replacingOccurrences(of: "overflow-guard", with: "overflow-guard-2")), origin: "en")!
+    check("frontmatter: 엔티티 이름이 다르면 걸린다",
+          frontmatterMismatches(canonical: ko, translation: enBad).joined(separator: ";").contains("entities") ? "걸림" : "안 걸림", "걸림")
+    let enBad2 = parseFrontmatterLines(splitLines(fmEn.replacingOccurrences(of: "\"12.4a\"", with: "\"12.4b\"")), origin: "en")!
+    check("frontmatter: parents sections가 다르면 걸린다",
+          frontmatterMismatches(canonical: ko, translation: enBad2).joined(separator: ";").contains("parents") ? "걸림" : "안 걸림", "걸림")
+
+    // 15. 번역 지시서의 모양. 대상 파일의 줄 번호가 들어가면 안 된다.
+    let manifest = syncManifest(source: "kb/wiki/spec/a.md", sourceVersion: "1.2",
+                                target: "kb/wiki/spec/a.en.md", targetExists: true, targetVersion: "1.1",
+                                mode: "sections", structural: false,
+                                preambleChanged: false, preambleLines: [],
+                                sections: [(num: "12.4a", heading: "제목", start: 507, end: 538)])
+    check("지시서: 모양", manifest.write(), """
+    {
+      "source": "kb/wiki/spec/a.md",
+      "source_version": "1.2",
+      "target": "kb/wiki/spec/a.en.md",
+      "target_exists": true,
+      "target_version": "1.1",
+      "mode": "sections",
+      "structural_change": false,
+      "preamble_changed": false,
+      "preamble_lines": [],
+      "changed_sections": [
+        {
+          "num": "12.4a",
+          "heading": "제목",
+          "source_lines": [
+            507,
+            538
+          ]
+        }
+      ]
+    }
+    """)
+
+    // 16. 제목이 생기거나 사라지면 구조 변경이다. 절 단위 대응이 무너진다.
+    check("diff: 구조 변경 판정",
+          String(DocDiff(touchedLines: [], addedHeads: ["## 새 절"], removedHeads: []).structural), "true")
+    check("diff: 문구만 바뀌면 구조 변경 아님",
+          String(DocDiff(touchedLines: [5], addedHeads: ["## 가"], removedHeads: ["## 가"]).structural), "false")
+
     print("\n\(pass + fail)건 중 \(pass) 통과, \(fail) 실패")
     exit(fail == 0 ? 0 : 1)
 }
@@ -1680,6 +2200,7 @@ let USAGE = """
   swift scripts/kb.swift impact <파일경로>      바뀐 문서의 파급 범위
   swift scripts/kb.swift check                 끊긴 참조가 있으면 exit 1
   swift scripts/kb.swift bump <파일경로>        프론트매터 버전 올리기
+  swift scripts/kb.swift sync <정본경로>        번역할 절을 지시서로 남긴다
   swift scripts/kb.swift selftest              파서 자체 검사
   swift scripts/kb.swift hook                  훅 payload를 stdin으로
 """
@@ -1693,6 +2214,9 @@ case "impact":
 case "bump":
     guard ARGS.count > 1 else { die(USAGE, 2) }
     cmdBump(ARGS[1])
+case "sync":
+    guard ARGS.count > 1 else { die(USAGE, 2) }
+    cmdSync(ARGS[1])
 case "check": cmdCheck()
 case "selftest": cmdSelftest()
 case "hook": cmdHook()

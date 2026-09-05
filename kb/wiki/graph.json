@@ -14,10 +14,10 @@
       "id": "acceptance-results",
       "type": "document",
       "doc_type": "verification",
-      "title": "수용 기준 결과",
+      "title": "Acceptance criteria results",
       "version": "1.0",
       "date": "2026-09-05",
-      "path": "spec/acceptance-results.md",
+      "path": "spec/acceptance-results.en.md",
       "tags": [
         "verification",
         "acceptance",
@@ -29,10 +29,10 @@
       "id": "rename-measurements",
       "type": "document",
       "doc_type": "measurement",
-      "title": "`rename(2)` 저장 정규화 실측",
-      "version": "1.0",
-      "date": "2026-09-05",
-      "path": "research/rename-measurements.md",
+      "title": "Measuring what `rename(2)` stores",
+      "version": "1.1",
+      "date": "2026-09-06",
+      "path": "research/rename-measurements.en.md",
       "tags": [
         "measurement",
         "filesystem",
@@ -48,10 +48,10 @@
       "id": "requirements",
       "type": "document",
       "doc_type": "requirements",
-      "title": "macOS 한글 파일명 자동 NFC 변환 메뉴바 앱: v1 요구사항",
-      "version": "1.1",
-      "date": "2026-09-05",
-      "path": "spec/requirements.md",
+      "title": "macOS menu bar app that converts Korean file names to NFC: v1 requirements",
+      "version": "1.3",
+      "date": "2026-09-06",
+      "path": "spec/requirements.en.md",
       "tags": [
         "requirements",
         "v1",
@@ -65,187 +65,187 @@
       "id": "acceptance-runner",
       "type": "entity",
       "entity_type": "script",
-      "definition": "진짜 앱을 띄워 진짜 파일로 T1~T11과 T14를 확인하는 자동 검증기. 사용자의 설정과 로그를 건드리지 않도록 앱이 MOJA_DEFAULTS_SUITE·MOJA_LOG_DIR 환경변수를 받고, 모든 파일 이름을 바이트 단위로 다룬다"
+      "definition": "automated verifier that launches the real app and checks T1-T11 and T14 with real files. the app takes MOJA_DEFAULTS_SUITE and MOJA_LOG_DIR so the user's settings and logs are never touched, and every file name is handled byte by byte"
     },
     {
       "id": "unverified-scenario",
       "type": "entity",
       "entity_type": "concept",
-      "definition": "이 환경에서 확인할 방법이 없어 남은 T13(재로그인), T15(24시간 방치), T16(Windows에서 열기). v1.0.0의 마지막 차단 요인이다"
+      "definition": "T13 (re-login), T15 (24 hours idle) and T16 (opening on Windows), left because this environment offers no way to check them. the last thing blocking v1.0.0"
     },
     {
       "id": "reconnect-recovery",
       "type": "entity",
       "entity_type": "mechanism",
-      "definition": "'연결 안 됨'이 된 폴더의 감시자를 놓아 주고 볼륨 마운트 알림을 듣되, 알림이 오지 않는 네트워크 공유를 위해 끊긴 폴더가 하나라도 있는 동안에만 보조 확인을 도는 복구 방식"
+      "definition": "recovery that releases the watcher of a folder that went 'not connected' and listens for volume mount notifications, running a secondary sweep only while at least one folder is disconnected, for network shares that send no notification"
     },
     {
       "id": "renamex_np",
       "type": "entity",
       "entity_type": "api",
-      "definition": "RENAME_EXCL 플래그를 붙이는 POSIX rename 확장. APFS에서는 정규화 무시 볼륨인데도 EEXIST 없이 성공하며 저장 바이트를 NFC로 바꾼다. exFAT은 ENOTSUP(45), HFS+는 EEXIST(17)를 돌려준다"
+      "definition": "POSIX rename extension taking a RENAME_EXCL flag. on APFS it succeeds without EEXIST even though the volume ignores normalization, and rewrites the stored bytes as NFC. exFAT returns ENOTSUP(45) and HFS+ returns EEXIST(17)"
     },
     {
       "id": "guarded-move",
       "type": "entity",
       "entity_type": "mechanism",
-      "definition": "EEXIST·ENOTSUP 처리와 inode 비교를 한 함수로 묶어 첫 시도와 2단계 폴백 양쪽에서 쓰는 이름 변경 관문. 폴백이 renamex_np만 쓰면 exFAT에서 임시 이름 단계부터 ENOTSUP으로 죽어 '지원 안 함'이 아니라 일반 실패로 보고되고 영원히 재시도한다"
+      "definition": "the rename gate that folds EEXIST/ENOTSUP handling and the inode comparison into one function used by both the first attempt and the two-step fallback. a fallback using only renamex_np dies on exFAT at the temporary-name step with ENOTSUP, so it reports a plain failure instead of 'unsupported' and retries forever"
     },
     {
       "id": "file-identity",
       "type": "entity",
       "entity_type": "mechanism",
-      "definition": "(st_dev, st_ino) 쌍. 목적지가 같은 파일인지 진짜 충돌인지 가르는 기준이고, 심볼릭 링크가 풀린 경로와 원래 경로로 같은 폴더가 두 번 들어오는 것을 거르는 기준이기도 하다"
+      "definition": "the (st_dev, st_ino) pair. it decides whether a destination is the same file or a real collision, and it also filters out the same folder arriving twice, once by its resolved path and once by the symlink"
     },
     {
       "id": "volume-capability-probe",
       "type": "entity",
       "entity_type": "mechanism",
-      "definition": "볼륨당 한 번, 대상 폴더에 NFC 이름의 숨김 임시 파일을 만들어 저장 형태를 확인하고 즉시 지운 뒤 st_dev 기준으로 캐시하는 실측. f_fstypename 문자열 판별은 SMB가 서버 구현에 좌우되고 드라이버도 바뀔 수 있어 쓰지 않는다"
+      "definition": "a once-per-volume measurement: create a hidden temporary file with an NFC name in the target directory, read back the stored form, delete it immediately, and cache the answer by st_dev. matching on the f_fstypename string is not used because SMB depends on the server implementation and drivers change"
     },
     {
       "id": "unsupported-volume",
       "type": "entity",
       "entity_type": "concept",
-      "definition": "HFS+·exFAT처럼 커널 드라이버가 이름을 강제로 NFD로 되돌려, NFC로 직접 만들어도 NFD로 저장되므로 어떤 전략으로도 변환할 수 없는 볼륨. '지원하지 않습니다'로 표시하고 건드리지 않는다"
+      "definition": "a volume such as HFS+ or exFAT whose kernel driver forces names back to NFD, so that even creating an NFC name directly stores NFD and no strategy can convert it. shown as '이 디스크(exFAT)는 변환을 지원하지 않습니다' and left alone"
     },
     {
       "id": "banned-foundation-api",
       "type": "entity",
       "entity_type": "constraint",
-      "definition": "FileManager.moveItem, createFile(atPath:), NSString.fileSystemRepresentation, URL.withUnsafeFileSystemRepresentation. 경로를 NFD로 분해하므로 실패하는 것이 아니라 성공하면서 NFD를 쓴다. 읽기(디렉터리 열거)는 안전하다"
+      "definition": "FileManager.moveItem, createFile(atPath:), NSString.fileSystemRepresentation, URL.withUnsafeFileSystemRepresentation. they decompose the path to NFD, so they do not fail: they succeed while writing NFD. reading (directory enumeration) is safe"
     },
     {
       "id": "zsh-globbing-trap",
       "type": "entity",
       "entity_type": "concept",
-      "definition": "zsh가 글로빙 결과를 NFC로 정규화해 `cp staging/* watched/` 같은 명령이 NFD 이름을 NFC로 바꿔서 복사하는 함정. 파일 이름 검증을 셸로 준비하면 안 되는 이유다"
+      "definition": "zsh normalizes globbing results to NFC, so a command like `cp staging/* watched/` copies NFD names as NFC. this is why a file name test must never be prepared through the shell"
     },
     {
       "id": "probe-volume",
       "type": "entity",
       "entity_type": "script",
-      "definition": "새 볼륨을 마운트한 뒤 경로만 넘기면 1절의 표를 다시 만드는 측정 스크립트. Foundation의 경로 변환을 일절 거치지 않는다"
+      "definition": "the measurement script that rebuilds the §1 table once a new volume is mounted and its path is passed in. it never goes through Foundation's path conversion"
     },
     {
       "id": "NFD",
       "type": "entity",
       "entity_type": "standard",
-      "definition": "유니코드 정규화 형식 D(자소 분리형). macOS 파인더가 한글 파일 이름을 저장하는 형태이고, Windows에서 `ㅂㅗㄱㅗㅅㅓ.docx`로 깨져 보이는 원인이다"
+      "definition": "Unicode Normalization Form D (decomposed). the form the macOS Finder stores Korean file names in, and the reason they appear broken on Windows as `ㅂㅗㄱㅗㅅㅓ.docx`"
     },
     {
       "id": "NFC",
       "type": "entity",
       "entity_type": "standard",
-      "definition": "유니코드 정규화 형식 C(조합형). Windows·리눅스·대부분의 웹이 쓰는 형태이고 Moja가 디스크에 남기려는 목표 형태다"
+      "definition": "Unicode Normalization Form C (composed). the form Windows, Linux and most of the web use, and the form Moja aims to leave on disk"
     },
     {
       "id": "byte-comparison",
       "type": "entity",
       "entity_type": "constraint",
-      "definition": "이름 비교를 String ==가 아니라 Array(name.utf8)로 하는 규칙. Swift의 ==는 정규화를 무시해 NFD와 NFC를 같다고 답하므로, ==로 판단하면 이 앱은 아무것도 하지 않는다"
+      "definition": "the rule that names are compared as Array(name.utf8), never with String ==. Swift's == ignores normalization and calls NFD and NFC equal, so judging by == makes this app do nothing at all"
     },
     {
       "id": "normalizer",
       "type": "entity",
       "entity_type": "component",
-      "definition": "이름 한 성분을 NFC로 바꾸고 변환이 필요한지 판정하는 순수 함수. 정준(NFC) 매핑만 쓰고 호환(NFKC) 매핑은 쓰지 않는다. NFKC는 전각 문자와 호환 자모를 다른 글자로 바꿔 사용자의 이름을 훼손한다"
+      "definition": "pure function that converts one name component to NFC and decides whether conversion is needed. it uses only the canonical (NFC) mapping, never compatibility (NFKC), which would turn full-width characters and compatibility jamo into different letters and damage the user's name"
     },
     {
       "id": "planner",
       "type": "entity",
       "entity_type": "component",
-      "definition": "건너뛰기 규칙, 깊이 우선 정렬, 한 배치 상한을 파일시스템에 접근하지 않고 결정하는 순수 로직"
+      "definition": "pure logic that decides the skip rules, the depth-first ordering and the per-batch ceiling without touching the filesystem"
     },
     {
       "id": "renamer",
       "type": "entity",
       "entity_type": "component",
-      "definition": "이름 하나를 NFC로 바꾸고 부모 디렉터리를 다시 열거해 저장된 원시 바이트가 NFC인지 검증하는 계층"
+      "definition": "the layer that converts one name to NFC and verifies it by enumerating the parent directory again to confirm the stored raw bytes are NFC"
     },
     {
       "id": "folder-watcher",
       "type": "entity",
       "entity_type": "component",
-      "definition": "FSEvents 스트림, 1.5초 디바운스, 3초 무시 목록, 미뤄진 항목 재확인을 묶어 폴더 하나를 감시하는 계층"
+      "definition": "the layer watching one folder, tying together the FSEvents stream, a 1.5 s debounce, a 3 s ignore list and the recheck of deferred items"
     },
     {
       "id": "batch-converter",
       "type": "entity",
       "entity_type": "component",
-      "definition": "감시 폴더의 기존 항목을 미리보기로 먼저 보여 준 뒤 한 번에 변환하는 경로. 취소하면 아무것도 바뀌지 않는다"
+      "definition": "the path that shows the existing items of a watched folder in a preview first and then converts them in one go. cancelling changes nothing"
     },
     {
       "id": "scanner",
       "type": "entity",
       "entity_type": "component",
-      "definition": "감시 폴더를 재귀로 훑어 변환 대상을 모으는 계층. 심볼릭 링크가 풀린 경로 때문에 같은 폴더를 두 번 훑지 않도록 file-identity로 거른다"
+      "definition": "the layer that walks a watched folder recursively to collect conversion targets. it filters with file-identity so a resolved symlink path does not make it walk the same folder twice"
     },
     {
       "id": "overflow-guard",
       "type": "entity",
       "entity_type": "constraint",
-      "definition": "한 이벤트 배치의 변환 대상이 500개를 넘으면 하나도 처리하지 않고 '항목이 많습니다, 일괄 변환을 쓰세요' 상태로 넘기는 폭주 방지 규칙. 클라우드 폴더의 첫 동기화가 표적이다"
+      "definition": "the rule that when one event batch holds more than 500 conversion targets, nothing is processed and the state becomes 'too many items, use batch conversion'. the first sync of a cloud folder is what it targets"
     },
     {
       "id": "stability-window",
       "type": "entity",
       "entity_type": "constraint",
-      "definition": "최종 수정 후 2초가 지나지 않은 항목은 아직 쓰는 중일 수 있어 미룬다. 이 규칙과 T1의 '2초 안에'는 산술적으로 양립할 수 없어 T1 기준을 4초로 완화했다"
+      "definition": "an item last modified less than 2 seconds ago may still be being written, so it is deferred. this rule and T1's 'within 2 seconds' are arithmetically incompatible, which is why T1's target was relaxed to 4 seconds"
     },
     {
       "id": "deferred-recheck",
       "type": "entity",
       "entity_type": "mechanism",
-      "definition": "안정화 대기에 걸려 미뤄진 항목을 다시 보러 오는 장치. 저장이 이미 끝났으면 새 이벤트가 오지 않으므로, 이것이 없으면 그 파일은 영영 변환되지 않는다"
+      "definition": "the device that comes back for an item deferred by the stability window. if the write already finished no new event arrives, so without this the file is never converted"
     },
     {
       "id": "ignore-list",
       "type": "entity",
       "entity_type": "mechanism",
-      "definition": "앱이 직접 바꾼 경로를 3초간 무시하는 2차 루프 방어선. 1차 방어선은 '이미 NFC면 아무것도 하지 않는다'는 규칙이고, 이 목록은 불필요한 열거와 로그를 줄일 뿐이다"
+      "definition": "the second line of defence against loops, ignoring for 3 seconds any path the app renamed itself. the first line is the rule 'do nothing if it is already NFC'; this list only cuts down needless enumeration and logging"
     },
     {
       "id": "skip-rule",
       "type": "entity",
       "entity_type": "concept",
-      "definition": "숨김 항목, 다운로드 임시 확장자, Office ~$ 파일, 번들 내부, 방금 수정된 항목을 건드리지 않는 규칙. '확신이 없으면 바꾸지 않는다'의 구현체다"
+      "definition": "the rule that leaves hidden items, download temp extensions, Office ~$ files, bundle interiors and just-modified items alone. it is the implementation of 'when in doubt, change nothing'"
     },
     {
       "id": "package-boundary",
       "type": "entity",
       "entity_type": "constraint",
-      "definition": "앱 꾸러미 안쪽은 건드리지 않고 꾸러미 자체의 이름만 바꾸는 경계. 판별에는 NSWorkspace가 아니라 URLResourceValues.isPackage를 쓴다. CoreKit이 AppKit에 의존하면 앱 없이 테스트할 수 없기 때문이다"
+      "definition": "the boundary that renames an app bundle itself but never touches its interior. the test uses URLResourceValues.isPackage rather than NSWorkspace, because a CoreKit that depends on AppKit cannot be tested without the app"
     },
     {
       "id": "login-item",
       "type": "entity",
       "entity_type": "api",
-      "definition": "SMAppService로 등록하는 로그인 항목. 등록이 앱의 코드 서명에 묶이므로 매번 달라지는 ad-hoc 서명 개발 빌드로는 T13을 의미 있게 검증할 수 없다"
+      "definition": "the login item registered through SMAppService. registration is tied to the app's code signature, so an ad-hoc signed development build, whose signature changes every time, cannot verify T13 meaningfully"
     },
     {
       "id": "log-store",
       "type": "entity",
       "entity_type": "component",
-      "definition": "~/Library/Logs/Moja/Moja.log에만 남기는 기록. 1MB가 넘으면 회전하고 직전 것 하나만 보관한다"
+      "definition": "the record kept only in ~/Library/Logs/Moja/Moja.log. it rotates past 1MB and keeps only the previous file"
     },
     {
       "id": "acceptance-scenario",
       "type": "entity",
       "entity_type": "concept",
-      "definition": "v1 릴리스 조건인 16개 시나리오 T1~T16. 전부 통과해야 v1.0.0이다"
+      "definition": "the 16 scenarios T1-T16 that gate the v1 release. v1.0.0 requires all of them to pass"
     },
     {
       "id": "transfer-path",
       "type": "entity",
       "entity_type": "concept",
-      "definition": "변환된 NFC 파일이 메일·메신저·클라우드·USB·zip을 거쳐 Windows에 도착했을 때 이름이 유지되는지 기록하는 표. 앱 기능이 아니라 한계 고지용이고 README에 그대로 들어간다"
+      "definition": "the table recording whether a converted NFC file keeps its name after travelling through mail, messengers, cloud, USB or zip to Windows. it is not an app feature but a statement of limits, and it goes into README verbatim"
     },
     {
       "id": "xcodegen",
       "type": "entity",
       "entity_type": "script",
-      "definition": "project.yml에서 Moja.xcodeproj를 만드는 도구. .xcodeproj는 생성물이라 손으로 고치지 않는다"
+      "definition": "the tool that generates Moja.xcodeproj from project.yml. the .xcodeproj is generated, so it is never edited by hand"
     },
     {
       "id": "App/AppModel.swift",
@@ -432,7 +432,7 @@
         "7",
         "12.4a"
       ],
-      "note": "7장의 T1~T16을 실제 앱으로 검증한 결과"
+      "note": "the result of verifying T1-T16 of §7 against the real app"
     },
     {
       "from": "acceptance-results",
@@ -443,7 +443,7 @@
         "2.3",
         "2.4"
       ],
-      "note": "T16의 exFAT 제약과 셸 글로빙 함정의 근거"
+      "note": "the basis for T16's exFAT constraint and the shell globbing trap"
     },
     {
       "from": "rename-measurements",
@@ -455,7 +455,7 @@
         "6",
         "11"
       ],
-      "note": "FR-3의 전제인 'rename(2)가 저장된 바이트를 바꾸는가'를 실측으로 확인한 문서"
+      "note": "measures the premise behind FR-3: whether rename(2) changes the bytes on disk"
     },
     {
       "from": "acceptance-results",

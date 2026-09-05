@@ -6,18 +6,18 @@
   "stats": {
     "sections": 57,
     "symbols": 28,
-    "edges": 325
+    "edges": 322
   },
   "sections": [
     {
       "id": "acceptance-results#1",
       "doc": "acceptance-results",
-      "path": "spec/acceptance-results.md",
+      "path": "spec/acceptance-results.en.md",
       "level": 2,
       "num": "1",
-      "heading": "결과",
-      "line_start": 45,
-      "line_end": 74,
+      "heading": "Results",
+      "line_start": 49,
+      "line_end": 78,
       "symbols_declared": [
         "T1",
         "T2",
@@ -41,24 +41,24 @@
     {
       "id": "acceptance-results#2",
       "doc": "acceptance-results",
-      "path": "spec/acceptance-results.md",
+      "path": "spec/acceptance-results.en.md",
       "level": 2,
       "num": "2",
-      "heading": "아직 검증하지 못한 것",
-      "line_start": 75,
-      "line_end": 78,
+      "heading": "Not yet verified",
+      "line_start": 79,
+      "line_end": 82,
       "symbols_declared": [],
       "symbols_mentioned": []
     },
     {
       "id": "acceptance-results#T13",
       "doc": "acceptance-results",
-      "path": "spec/acceptance-results.md",
+      "path": "spec/acceptance-results.en.md",
       "level": 3,
       "num": "T13",
-      "heading": "로그인 시 자동 실행",
-      "line_start": 79,
-      "line_end": 88,
+      "heading": "launch at login",
+      "line_start": 83,
+      "line_end": 92,
       "symbols_declared": [
         "T13"
       ],
@@ -67,12 +67,12 @@
     {
       "id": "acceptance-results#T15",
       "doc": "acceptance-results",
-      "path": "spec/acceptance-results.md",
+      "path": "spec/acceptance-results.en.md",
       "level": 3,
       "num": "T15",
-      "heading": "24시간 방치 (메모리 30MB 이하)",
-      "line_start": 89,
-      "line_end": 98,
+      "heading": "24 hours idle (memory under 30MB)",
+      "line_start": 93,
+      "line_end": 102,
       "symbols_declared": [
         "T15"
       ],
@@ -81,12 +81,12 @@
     {
       "id": "acceptance-results#T16",
       "doc": "acceptance-results",
-      "path": "spec/acceptance-results.md",
+      "path": "spec/acceptance-results.en.md",
       "level": 3,
       "num": "T16",
-      "heading": "Windows에서 열기",
-      "line_start": 99,
-      "line_end": 110,
+      "heading": "opening on Windows",
+      "line_start": 103,
+      "line_end": 115,
       "symbols_declared": [
         "T16"
       ],
@@ -95,12 +95,12 @@
     {
       "id": "acceptance-results#3",
       "doc": "acceptance-results",
-      "path": "spec/acceptance-results.md",
+      "path": "spec/acceptance-results.en.md",
       "level": 2,
       "num": "3",
-      "heading": "검증 중 고친 것",
-      "line_start": 111,
-      "line_end": 123,
+      "heading": "Fixed during verification",
+      "line_start": 116,
+      "line_end": 127,
       "symbols_declared": [],
       "symbols_mentioned": [
         "T11"
@@ -109,12 +109,12 @@
     {
       "id": "acceptance-results#4",
       "doc": "acceptance-results",
-      "path": "spec/acceptance-results.md",
+      "path": "spec/acceptance-results.en.md",
       "level": 2,
       "num": "4",
-      "heading": "검증 방법에 대한 기록",
-      "line_start": 124,
-      "line_end": 133,
+      "heading": "Notes on method",
+      "line_start": 128,
+      "line_end": 136,
       "symbols_declared": [],
       "symbols_mentioned": [
         "T10"
@@ -123,60 +123,60 @@
     {
       "id": "rename-measurements#1",
       "doc": "rename-measurements",
-      "path": "research/rename-measurements.md",
+      "path": "research/rename-measurements.en.md",
       "level": 2,
       "num": "1",
-      "heading": "결론 요약",
-      "line_start": 68,
-      "line_end": 83,
+      "heading": "Summary",
+      "line_start": 72,
+      "line_end": 87,
       "symbols_declared": [],
       "symbols_mentioned": []
     },
     {
       "id": "rename-measurements#2",
       "doc": "rename-measurements",
-      "path": "research/rename-measurements.md",
+      "path": "research/rename-measurements.en.md",
       "level": 2,
       "num": "2",
-      "heading": "항목별 결과",
-      "line_start": 84,
-      "line_end": 85,
+      "heading": "Results by item",
+      "line_start": 88,
+      "line_end": 89,
       "symbols_declared": [],
       "symbols_mentioned": []
     },
     {
       "id": "rename-measurements#2.1",
       "doc": "rename-measurements",
-      "path": "research/rename-measurements.md",
+      "path": "research/rename-measurements.en.md",
       "level": 3,
       "num": "2.1",
-      "heading": "APFS: 전부 통과",
-      "line_start": 86,
-      "line_end": 103,
+      "heading": "APFS: everything passes",
+      "line_start": 90,
+      "line_end": 108,
       "symbols_declared": [],
       "symbols_mentioned": []
     },
     {
       "id": "rename-measurements#2.2",
       "doc": "rename-measurements",
-      "path": "research/rename-measurements.md",
+      "path": "research/rename-measurements.en.md",
       "level": 3,
       "num": "2.2",
-      "heading": "HFS+: 변환 불가",
-      "line_start": 104,
-      "line_end": 110,
+      "heading": "HFS+: cannot convert",
+      "line_start": 109,
+      "line_end": 115,
       "symbols_declared": [],
       "symbols_mentioned": []
     },
     {
       "id": "rename-measurements#2.3",
       "doc": "rename-measurements",
-      "path": "research/rename-measurements.md",
+      "path": "research/rename-measurements.en.md",
       "level": 3,
       "num": "2.3",
-      "heading": "exFAT: 변환 불가 (예상과 달랐음)",
-      "line_start": 111,
-      "line_end": 128,
+      "heading": "exFAT: cannot convert (contrary to expectation)",
+      "line_start": 116,
+      "line_end": 134,
       "symbols_declared": [],
       "symbols_mentioned": [
         "T16"
@@ -185,24 +185,24 @@
     {
       "id": "rename-measurements#2.4",
       "doc": "rename-measurements",
-      "path": "research/rename-measurements.md",
+      "path": "research/rename-measurements.en.md",
       "level": 3,
       "num": "2.4",
-      "heading": "함정: 셸이 거짓말을 한다",
-      "line_start": 129,
-      "line_end": 138,
+      "heading": "The trap: the shell lies",
+      "line_start": 135,
+      "line_end": 144,
       "symbols_declared": [],
       "symbols_mentioned": []
     },
     {
       "id": "rename-measurements#3",
       "doc": "rename-measurements",
-      "path": "research/rename-measurements.md",
+      "path": "research/rename-measurements.en.md",
       "level": 2,
       "num": "3",
-      "heading": "Foundation을 어디까지 믿을 수 있는가 ⚠️",
-      "line_start": 139,
-      "line_end": 166,
+      "heading": "How far Foundation can be trusted ⚠️",
+      "line_start": 145,
+      "line_end": 171,
       "symbols_declared": [],
       "symbols_mentioned": [
         "FR-3"
@@ -211,24 +211,24 @@
     {
       "id": "rename-measurements#4",
       "doc": "rename-measurements",
-      "path": "research/rename-measurements.md",
+      "path": "research/rename-measurements.en.md",
       "level": 2,
       "num": "4",
-      "heading": "설계에 반영할 것",
-      "line_start": 167,
-      "line_end": 168,
+      "heading": "What the design takes from this",
+      "line_start": 172,
+      "line_end": 173,
       "symbols_declared": [],
       "symbols_mentioned": []
     },
     {
       "id": "rename-measurements#4.1",
       "doc": "rename-measurements",
-      "path": "research/rename-measurements.md",
+      "path": "research/rename-measurements.en.md",
       "level": 3,
       "num": "4.1",
-      "heading": "이름 변경 순서 (FR-3 / requirements 12.1 갱신)",
-      "line_start": 169,
-      "line_end": 191,
+      "heading": "Rename order (FR-3, updates requirements §12.1)",
+      "line_start": 174,
+      "line_end": 197,
       "symbols_declared": [],
       "symbols_mentioned": [
         "FR-3"
@@ -237,36 +237,36 @@
     {
       "id": "rename-measurements#4.2",
       "doc": "rename-measurements",
-      "path": "research/rename-measurements.md",
+      "path": "research/rename-measurements.en.md",
       "level": 3,
       "num": "4.2",
-      "heading": "볼륨 능력 판별 (신규)",
-      "line_start": 192,
-      "line_end": 206,
+      "heading": "Volume capability probe (new)",
+      "line_start": 198,
+      "line_end": 212,
       "symbols_declared": [],
       "symbols_mentioned": []
     },
     {
       "id": "rename-measurements#4.3",
       "doc": "rename-measurements",
-      "path": "research/rename-measurements.md",
+      "path": "research/rename-measurements.en.md",
       "level": 3,
       "num": "4.3",
-      "heading": "금지 목록",
-      "line_start": 207,
-      "line_end": 219,
+      "heading": "The banned list",
+      "line_start": 213,
+      "line_end": 225,
       "symbols_declared": [],
       "symbols_mentioned": []
     },
     {
       "id": "rename-measurements#5",
       "doc": "rename-measurements",
-      "path": "research/rename-measurements.md",
+      "path": "research/rename-measurements.en.md",
       "level": 2,
       "num": "5",
-      "heading": "남은 미측정 항목",
-      "line_start": 220,
-      "line_end": 229,
+      "heading": "Still unmeasured",
+      "line_start": 226,
+      "line_end": 235,
       "symbols_declared": [],
       "symbols_mentioned": [
         "T11"
@@ -275,96 +275,96 @@
     {
       "id": "requirements#0",
       "doc": "requirements",
-      "path": "spec/requirements.md",
+      "path": "spec/requirements.en.md",
       "level": 2,
       "num": "0",
-      "heading": "한 줄 요약",
-      "line_start": 105,
-      "line_end": 112,
+      "heading": "One line",
+      "line_start": 109,
+      "line_end": 116,
       "symbols_declared": [],
       "symbols_mentioned": []
     },
     {
       "id": "requirements#1",
       "doc": "requirements",
-      "path": "spec/requirements.md",
+      "path": "spec/requirements.en.md",
       "level": 2,
       "num": "1",
-      "heading": "배경과 문제",
-      "line_start": 113,
-      "line_end": 127,
+      "heading": "Background and problem",
+      "line_start": 117,
+      "line_end": 132,
       "symbols_declared": [],
       "symbols_mentioned": []
     },
     {
       "id": "requirements#2",
       "doc": "requirements",
-      "path": "spec/requirements.md",
+      "path": "spec/requirements.en.md",
       "level": 2,
       "num": "2",
-      "heading": "목표 사용자",
-      "line_start": 128,
-      "line_end": 138,
+      "heading": "Target user",
+      "line_start": 133,
+      "line_end": 146,
       "symbols_declared": [],
       "symbols_mentioned": []
     },
     {
       "id": "requirements#3",
       "doc": "requirements",
-      "path": "spec/requirements.md",
+      "path": "spec/requirements.en.md",
       "level": 2,
       "num": "3",
-      "heading": "범위",
-      "line_start": 139,
-      "line_end": 140,
+      "heading": "Scope",
+      "line_start": 147,
+      "line_end": 148,
       "symbols_declared": [],
       "symbols_mentioned": []
     },
     {
       "id": "requirements#3.1",
       "doc": "requirements",
-      "path": "spec/requirements.md",
+      "path": "spec/requirements.en.md",
       "level": 3,
       "num": "3.1",
-      "heading": "v1에 포함",
-      "line_start": 141,
-      "line_end": 149,
+      "heading": "In v1",
+      "line_start": 149,
+      "line_end": 158,
       "symbols_declared": [],
       "symbols_mentioned": []
     },
     {
       "id": "requirements#3.2",
       "doc": "requirements",
-      "path": "spec/requirements.md",
+      "path": "spec/requirements.en.md",
       "level": 3,
       "num": "3.2",
-      "heading": "v1에서 제외 (명시적 비목표)",
-      "line_start": 150,
-      "line_end": 161,
+      "heading": "Out of v1 (explicit non-goals)",
+      "line_start": 159,
+      "line_end": 171,
       "symbols_declared": [],
       "symbols_mentioned": []
     },
     {
       "id": "requirements#4",
       "doc": "requirements",
-      "path": "spec/requirements.md",
+      "path": "spec/requirements.en.md",
       "level": 2,
       "num": "4",
-      "heading": "기능 요구사항",
-      "line_start": 162,
-      "line_end": 165,
+      "heading": "Functional requirements",
+      "line_start": 172,
+      "line_end": 175,
       "symbols_declared": [],
       "symbols_mentioned": []
     },
     {
       "id": "requirements#FR-1",
       "doc": "requirements",
-      "path": "spec/requirements.md",
+      "path": "spec/requirements.en.md",
       "level": 3,
       "num": "FR-1",
-      "heading": "폴더 감시 (필수)",
-      "line_start": 166,
-      "line_end": 173,
+      "heading": "Folder watching (required)",
+      "line_start": 176,
+      "line_end": 184,
       "symbols_declared": [
         "FR-1"
       ],
@@ -373,12 +373,12 @@
     {
       "id": "requirements#FR-2",
       "doc": "requirements",
-      "path": "spec/requirements.md",
+      "path": "spec/requirements.en.md",
       "level": 3,
       "num": "FR-2",
-      "heading": "변환 규칙 (필수)",
-      "line_start": 174,
-      "line_end": 187,
+      "heading": "Conversion rule (required)",
+      "line_start": 185,
+      "line_end": 201,
       "symbols_declared": [
         "FR-2"
       ],
@@ -387,12 +387,12 @@
     {
       "id": "requirements#FR-3",
       "doc": "requirements",
-      "path": "spec/requirements.md",
+      "path": "spec/requirements.en.md",
       "level": 3,
       "num": "FR-3",
-      "heading": "이름 변경 구현 (필수, 함정 있음)",
-      "line_start": 188,
-      "line_end": 199,
+      "heading": "Rename implementation (required, has a trap)",
+      "line_start": 202,
+      "line_end": 215,
       "symbols_declared": [
         "FR-3"
       ],
@@ -401,12 +401,12 @@
     {
       "id": "requirements#FR-4",
       "doc": "requirements",
-      "path": "spec/requirements.md",
+      "path": "spec/requirements.en.md",
       "level": 3,
       "num": "FR-4",
-      "heading": "폴더명 변환 순서 (필수)",
-      "line_start": 200,
-      "line_end": 205,
+      "heading": "Folder rename ordering (required)",
+      "line_start": 216,
+      "line_end": 221,
       "symbols_declared": [
         "FR-4"
       ],
@@ -415,12 +415,12 @@
     {
       "id": "requirements#FR-5",
       "doc": "requirements",
-      "path": "spec/requirements.md",
+      "path": "spec/requirements.en.md",
       "level": 3,
       "num": "FR-5",
-      "heading": "무한 루프·폭주 방지 (필수)",
-      "line_start": 206,
-      "line_end": 212,
+      "heading": "Loop and overflow prevention (required)",
+      "line_start": 222,
+      "line_end": 230,
       "symbols_declared": [
         "FR-5"
       ],
@@ -431,12 +431,12 @@
     {
       "id": "requirements#FR-6",
       "doc": "requirements",
-      "path": "spec/requirements.md",
+      "path": "spec/requirements.en.md",
       "level": 3,
       "num": "FR-6",
-      "heading": "일괄 변환 (필수)",
-      "line_start": 213,
-      "line_end": 219,
+      "heading": "Batch conversion (required)",
+      "line_start": 231,
+      "line_end": 238,
       "symbols_declared": [
         "FR-6"
       ],
@@ -445,12 +445,12 @@
     {
       "id": "requirements#FR-7",
       "doc": "requirements",
-      "path": "spec/requirements.md",
+      "path": "spec/requirements.en.md",
       "level": 3,
       "num": "FR-7",
-      "heading": "메뉴바 UI (필수)",
-      "line_start": 220,
-      "line_end": 249,
+      "heading": "Menu bar UI (required)",
+      "line_start": 239,
+      "line_end": 269,
       "symbols_declared": [
         "FR-7"
       ],
@@ -459,12 +459,12 @@
     {
       "id": "requirements#FR-8",
       "doc": "requirements",
-      "path": "spec/requirements.md",
+      "path": "spec/requirements.en.md",
       "level": 3,
       "num": "FR-8",
-      "heading": "첫 실행 온보딩 (필수)",
-      "line_start": 250,
-      "line_end": 258,
+      "heading": "First-run onboarding (required)",
+      "line_start": 270,
+      "line_end": 278,
       "symbols_declared": [
         "FR-8"
       ],
@@ -473,12 +473,12 @@
     {
       "id": "requirements#FR-9",
       "doc": "requirements",
-      "path": "spec/requirements.md",
+      "path": "spec/requirements.en.md",
       "level": 3,
       "num": "FR-9",
-      "heading": "로그인 시 자동 실행 (필수)",
-      "line_start": 259,
-      "line_end": 264,
+      "heading": "Launch at login (required)",
+      "line_start": 279,
+      "line_end": 284,
       "symbols_declared": [
         "FR-9"
       ],
@@ -487,12 +487,12 @@
     {
       "id": "requirements#FR-10",
       "doc": "requirements",
-      "path": "spec/requirements.md",
+      "path": "spec/requirements.en.md",
       "level": 3,
       "num": "FR-10",
-      "heading": "로그 (필수)",
-      "line_start": 265,
-      "line_end": 270,
+      "heading": "Logging (required)",
+      "line_start": 285,
+      "line_end": 291,
       "symbols_declared": [
         "FR-10"
       ],
@@ -501,12 +501,12 @@
     {
       "id": "requirements#FR-11",
       "doc": "requirements",
-      "path": "spec/requirements.md",
+      "path": "spec/requirements.en.md",
       "level": 3,
       "num": "FR-11",
-      "heading": "설정 저장 (필수)",
-      "line_start": 271,
-      "line_end": 277,
+      "heading": "Settings persistence (required)",
+      "line_start": 292,
+      "line_end": 299,
       "symbols_declared": [
         "FR-11"
       ],
@@ -515,24 +515,24 @@
     {
       "id": "requirements#5",
       "doc": "requirements",
-      "path": "spec/requirements.md",
+      "path": "spec/requirements.en.md",
       "level": 2,
       "num": "5",
-      "heading": "비기능 요구사항",
-      "line_start": 278,
-      "line_end": 294,
+      "heading": "Non-functional requirements",
+      "line_start": 300,
+      "line_end": 316,
       "symbols_declared": [],
       "symbols_mentioned": []
     },
     {
       "id": "requirements#6",
       "doc": "requirements",
-      "path": "spec/requirements.md",
+      "path": "spec/requirements.en.md",
       "level": 2,
       "num": "6",
-      "heading": "기술 설계 가이드",
-      "line_start": 295,
-      "line_end": 320,
+      "heading": "Technical design guide",
+      "line_start": 317,
+      "line_end": 344,
       "symbols_declared": [],
       "symbols_mentioned": [
         "FR-3",
@@ -543,12 +543,12 @@
     {
       "id": "requirements#7",
       "doc": "requirements",
-      "path": "spec/requirements.md",
+      "path": "spec/requirements.en.md",
       "level": 2,
       "num": "7",
-      "heading": "테스트 시나리오 (수용 기준)",
-      "line_start": 321,
-      "line_end": 348,
+      "heading": "Test scenarios (acceptance criteria)",
+      "line_start": 345,
+      "line_end": 372,
       "symbols_declared": [
         "T1",
         "T2",
@@ -570,49 +570,50 @@
       "symbols_mentioned": []
     },
     {
-      "id": "requirements#전송-경로-검증-readme용-앱-자체-기능-아님",
+      "id": "requirements#7.1",
       "doc": "requirements",
-      "path": "spec/requirements.md",
+      "path": "spec/requirements.en.md",
       "level": 3,
-      "heading": "전송 경로 검증 (README용, 앱 자체 기능 아님)",
-      "line_start": 349,
-      "line_end": 368,
+      "num": "7.1",
+      "heading": "Transfer path verification (for the README, not an app feature)",
+      "line_start": 373,
+      "line_end": 392,
       "symbols_declared": [],
       "symbols_mentioned": []
     },
     {
       "id": "requirements#8",
       "doc": "requirements",
-      "path": "spec/requirements.md",
+      "path": "spec/requirements.en.md",
       "level": 2,
       "num": "8",
-      "heading": "배포",
-      "line_start": 369,
-      "line_end": 381,
+      "heading": "Distribution",
+      "line_start": 393,
+      "line_end": 408,
       "symbols_declared": [],
       "symbols_mentioned": []
     },
     {
       "id": "requirements#9",
       "doc": "requirements",
-      "path": "spec/requirements.md",
+      "path": "spec/requirements.en.md",
       "level": 2,
       "num": "9",
-      "heading": "README 요구사항",
-      "line_start": 382,
-      "line_end": 393,
+      "heading": "README requirements",
+      "line_start": 409,
+      "line_end": 423,
       "symbols_declared": [],
       "symbols_mentioned": []
     },
     {
       "id": "requirements#10",
       "doc": "requirements",
-      "path": "spec/requirements.md",
+      "path": "spec/requirements.en.md",
       "level": 2,
       "num": "10",
-      "heading": "미결 사항 (Claude Code는 이 항목을 임의로 정하지 말고 첫 보고에서 질문할 것)",
-      "line_start": 394,
-      "line_end": 399,
+      "heading": "Open questions (Claude Code must not settle these alone; ask in the first report)",
+      "line_start": 424,
+      "line_end": 432,
       "symbols_declared": [],
       "symbols_mentioned": [
         "FR-14"
@@ -621,12 +622,12 @@
     {
       "id": "requirements#10.1",
       "doc": "requirements",
-      "path": "spec/requirements.md",
+      "path": "spec/requirements.en.md",
       "level": 3,
       "num": "10.1",
-      "heading": "결정 (2026-09-04)",
-      "line_start": 400,
-      "line_end": 409,
+      "heading": "Decisions (2026-09-04)",
+      "line_start": 433,
+      "line_end": 442,
       "symbols_declared": [],
       "symbols_mentioned": [
         "FR-5"
@@ -635,22 +636,21 @@
     {
       "id": "requirements#11",
       "doc": "requirements",
-      "path": "spec/requirements.md",
+      "path": "spec/requirements.en.md",
       "level": 2,
       "num": "11",
-      "heading": "작업 지시 (Claude Code 실행 순서)",
-      "line_start": 410,
-      "line_end": 430,
+      "heading": "Work instructions (execution order for Claude Code)",
+      "line_start": 443,
+      "line_end": 470,
       "symbols_declared": [],
       "symbols_mentioned": [
         "FR-3",
         "T1",
-        "T6",
-        "T15",
         "T2",
         "T3",
         "T4",
         "T5",
+        "T6",
         "T7",
         "T8",
         "T9",
@@ -658,30 +658,31 @@
         "T11",
         "T12",
         "T13",
-        "T14"
+        "T14",
+        "T15"
       ]
     },
     {
       "id": "requirements#12",
       "doc": "requirements",
-      "path": "spec/requirements.md",
+      "path": "spec/requirements.en.md",
       "level": 2,
       "num": "12",
-      "heading": "요구사항 대비 구현 차이 (구현 중 갱신)",
-      "line_start": 431,
-      "line_end": 434,
+      "heading": "Where the implementation diverged (updated during development)",
+      "line_start": 471,
+      "line_end": 475,
       "symbols_declared": [],
       "symbols_mentioned": []
     },
     {
       "id": "requirements#12.1",
       "doc": "requirements",
-      "path": "spec/requirements.md",
+      "path": "spec/requirements.en.md",
       "level": 3,
       "num": "12.1",
-      "heading": "FR-3: `renamex_np(RENAME_EXCL)`을 1순위로 둔다",
-      "line_start": 435,
-      "line_end": 465,
+      "heading": "FR-3: `renamex_np(RENAME_EXCL)` becomes the first choice",
+      "line_start": 476,
+      "line_end": 507,
       "symbols_declared": [],
       "symbols_mentioned": [
         "FR-3"
@@ -690,12 +691,12 @@
     {
       "id": "requirements#12.1a",
       "doc": "requirements",
-      "path": "spec/requirements.md",
+      "path": "spec/requirements.en.md",
       "level": 3,
       "num": "12.1a",
-      "heading": "FR-3 검증 방법: 읽기는 Foundation을 써도 된다",
-      "line_start": 466,
-      "line_end": 477,
+      "heading": "FR-3 verification: Foundation is fine for reading",
+      "line_start": 508,
+      "line_end": 519,
       "symbols_declared": [],
       "symbols_mentioned": [
         "FR-3"
@@ -704,24 +705,24 @@
     {
       "id": "requirements#12.1b",
       "doc": "requirements",
-      "path": "spec/requirements.md",
+      "path": "spec/requirements.en.md",
       "level": 3,
       "num": "12.1b",
-      "heading": "볼륨 능력 판별 (신규)",
-      "line_start": 478,
-      "line_end": 487,
+      "heading": "Volume capability probe (new)",
+      "line_start": 520,
+      "line_end": 530,
       "symbols_declared": [],
       "symbols_mentioned": []
     },
     {
       "id": "requirements#12.2",
       "doc": "requirements",
-      "path": "spec/requirements.md",
+      "path": "spec/requirements.en.md",
       "level": 3,
       "num": "12.2",
-      "heading": "FR-2: 패키지 판별에 `NSWorkspace`를 쓰지 않는다",
-      "line_start": 488,
-      "line_end": 492,
+      "heading": "FR-2: `NSWorkspace` is not used for package detection",
+      "line_start": 531,
+      "line_end": 535,
       "symbols_declared": [],
       "symbols_mentioned": [
         "FR-2"
@@ -730,36 +731,36 @@
     {
       "id": "requirements#12.3",
       "doc": "requirements",
-      "path": "spec/requirements.md",
+      "path": "spec/requirements.en.md",
       "level": 3,
       "num": "12.3",
-      "heading": "6장 모듈 구조: `Core/*`를 로컬 SwiftPM 패키지 `CoreKit`으로 분리",
-      "line_start": 493,
-      "line_end": 499,
+      "heading": "§6 module structure: `Core/*` split into a local SwiftPM package, `CoreKit`",
+      "line_start": 536,
+      "line_end": 543,
       "symbols_declared": [],
       "symbols_mentioned": []
     },
     {
       "id": "requirements#12.4",
       "doc": "requirements",
-      "path": "spec/requirements.md",
+      "path": "spec/requirements.en.md",
       "level": 3,
       "num": "12.4",
-      "heading": "5장 언어: Swift 6가 아닌 Swift 5 언어 모드",
-      "line_start": 500,
-      "line_end": 506,
+      "heading": "§5 language: Swift 5 language mode, not Swift 6",
+      "line_start": 544,
+      "line_end": 551,
       "symbols_declared": [],
       "symbols_mentioned": []
     },
     {
       "id": "requirements#12.4a",
       "doc": "requirements",
-      "path": "spec/requirements.md",
+      "path": "spec/requirements.en.md",
       "level": 3,
       "num": "12.4a",
-      "heading": "T1의 \"2초 안에\"는 FR-2와 양립할 수 없다 ⚠️ 판단 필요",
-      "line_start": 507,
-      "line_end": 538,
+      "heading": "T1's \"within 2 seconds\" is incompatible with FR-2 ⚠️ decision needed",
+      "line_start": 552,
+      "line_end": 585,
       "symbols_declared": [],
       "symbols_mentioned": [
         "T1",
@@ -769,12 +770,12 @@
     {
       "id": "requirements#12.4b",
       "doc": "requirements",
-      "path": "spec/requirements.md",
+      "path": "spec/requirements.en.md",
       "level": 3,
       "num": "12.4b",
-      "heading": "미뤄진 항목의 재확인 (신규)",
-      "line_start": 539,
-      "line_end": 547,
+      "heading": "Rechecking deferred items (new)",
+      "line_start": 586,
+      "line_end": 595,
       "symbols_declared": [],
       "symbols_mentioned": [
         "FR-2"
@@ -783,24 +784,24 @@
     {
       "id": "requirements#12.4c",
       "doc": "requirements",
-      "path": "spec/requirements.md",
+      "path": "spec/requirements.en.md",
       "level": 3,
       "num": "12.4c",
-      "heading": "폴더 중복 스캔 (구현 중 발견)",
-      "line_start": 548,
-      "line_end": 555,
+      "heading": "Duplicate folder scanning (found during implementation)",
+      "line_start": 596,
+      "line_end": 602,
       "symbols_declared": [],
       "symbols_mentioned": []
     },
     {
       "id": "requirements#12.5",
       "doc": "requirements",
-      "path": "spec/requirements.md",
+      "path": "spec/requirements.en.md",
       "level": 3,
       "num": "12.5",
-      "heading": "변환이 불가능한 볼륨 (측정 완료)",
-      "line_start": 556,
-      "line_end": 567,
+      "heading": "Volumes where conversion is impossible (measured)",
+      "line_start": 603,
+      "line_end": 614,
       "symbols_declared": [],
       "symbols_mentioned": []
     }
@@ -1876,6 +1877,11 @@
     },
     {
       "from": "acceptance-results#1",
+      "to": "requirements#12.4a",
+      "relation": "references"
+    },
+    {
+      "from": "acceptance-results#1",
       "to": "acceptance-results#2",
       "relation": "references"
     },
@@ -1913,6 +1919,11 @@
       "from": "acceptance-results#T16",
       "to": "T16",
       "relation": "declares"
+    },
+    {
+      "from": "acceptance-results#T16",
+      "to": "requirements#7.1",
+      "relation": "references"
     },
     {
       "from": "acceptance-results",
@@ -2110,11 +2121,6 @@
       "relation": "mentions"
     },
     {
-      "from": "requirements#FR-5",
-      "to": "requirements#2",
-      "relation": "references"
-    },
-    {
       "from": "requirements",
       "to": "requirements#FR-6",
       "relation": "contains"
@@ -2198,11 +2204,6 @@
       "from": "requirements#6",
       "to": "FR-4",
       "relation": "mentions"
-    },
-    {
-      "from": "requirements#6",
-      "to": "requirements#3",
-      "relation": "references"
     },
     {
       "from": "requirements",
@@ -2296,7 +2297,7 @@
     },
     {
       "from": "requirements",
-      "to": "requirements#전송-경로-검증-readme용-앱-자체-기능-아님",
+      "to": "requirements#7.1",
       "relation": "contains"
     },
     {
@@ -2311,7 +2312,7 @@
     },
     {
       "from": "requirements#9",
-      "to": "requirements#7",
+      "to": "requirements#7.1",
       "relation": "references"
     },
     {
@@ -2351,16 +2352,6 @@
     },
     {
       "from": "requirements#11",
-      "to": "T6",
-      "relation": "mentions"
-    },
-    {
-      "from": "requirements#11",
-      "to": "T15",
-      "relation": "mentions"
-    },
-    {
-      "from": "requirements#11",
       "to": "T2",
       "relation": "mentions"
     },
@@ -2377,6 +2368,11 @@
     {
       "from": "requirements#11",
       "to": "T5",
+      "relation": "mentions"
+    },
+    {
+      "from": "requirements#11",
+      "to": "T6",
       "relation": "mentions"
     },
     {
@@ -2421,17 +2417,17 @@
     },
     {
       "from": "requirements#11",
+      "to": "T15",
+      "relation": "mentions"
+    },
+    {
+      "from": "requirements#11",
       "to": "requirements#10",
       "relation": "references"
     },
     {
       "from": "requirements#11",
       "to": "requirements#7",
-      "relation": "references"
-    },
-    {
-      "from": "requirements#11",
-      "to": "requirements#3",
       "relation": "references"
     },
     {
@@ -2448,11 +2444,6 @@
       "from": "requirements#12.1",
       "to": "FR-3",
       "relation": "mentions"
-    },
-    {
-      "from": "requirements#12.1",
-      "to": "requirements#3",
-      "relation": "references"
     },
     {
       "from": "requirements",
@@ -2526,22 +2517,17 @@
     },
     {
       "from": "requirements#12.4a",
+      "to": "requirements#12.4b",
+      "relation": "references"
+    },
+    {
+      "from": "requirements#12.4a",
       "to": "requirements#5",
       "relation": "references"
     },
     {
       "from": "requirements#12.4a",
       "to": "requirements#7",
-      "relation": "references"
-    },
-    {
-      "from": "requirements#12.4a",
-      "to": "requirements#1",
-      "relation": "references"
-    },
-    {
-      "from": "requirements#12.4a",
-      "to": "requirements#2",
       "relation": "references"
     },
     {
