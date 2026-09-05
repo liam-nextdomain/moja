@@ -70,6 +70,49 @@ let DOC_LABELS: [(String, String)] = [
     ("rename-measurements", "rename-measurements"), ("acceptance-results", "acceptance-results"),
 ]
 
+// MARK: - 정본과 번역본
+
+/// 번역본을 알아보는 접미사. 언어를 늘리면 이 목록만 늘린다.
+/// 한국어가 정본이고 영어가 번역본이다. 사람은 정본을 쓰고 고치며, 클로드는 번역본을 읽는다.
+let TRANSLATION_SUFFIXES = [".en.md"]
+
+/// kb/wiki 안에서 파일이 맡은 역할.
+/// - canonical: 한국어 정본. 사람이 고친다. 버전의 주인이다.
+/// - translation: 영어 번역본. 클로드가 읽고 그래프가 색인한다.
+/// - apparatus: index.md와 log.md. 문서가 아니라 장치다.
+enum WikiRole { case canonical, translation, apparatus }
+
+/// kb/wiki 기준 상대 경로를 받는다. "spec/requirements.en.md" 처럼.
+func classifyWiki(_ wikiRel: String) -> WikiRole {
+    let name = wikiRel.contains("/") ? String(wikiRel.split(separator: "/").last!) : wikiRel
+    // 하위 폴더의 index.md도 장치로 본다. 예전에는 loadDocs가 최상위만 걸러서
+    // kb/wiki/spec/index.md가 그래프 문서가 되는데 훅은 그것을 장치로 보고 건너뛰었다.
+    if name == "index.md" || name == "log.md" { return .apparatus }
+    if TRANSLATION_SUFFIXES.contains(where: { name.hasSuffix($0) }) { return .translation }
+    return .canonical
+}
+
+/// 저장소 뿌리 기준 경로를 받아 kb/wiki 안의 마크다운이면 역할과 함께 준다.
+/// cmdBump·cmdImpact·cmdHook이 전부 뿌리 기준 경로를 다루므로 classifyWiki와 따로 둔다.
+func wikiFile(repoRel: String) -> (wikiRel: String, role: WikiRole)? {
+    guard repoRel.hasPrefix("kb/wiki/"), repoRel.hasSuffix(".md") else { return nil }
+    let wikiRel = String(repoRel.dropFirst("kb/wiki/".count))
+    return (wikiRel, classifyWiki(wikiRel))
+}
+
+/// 정본 → 번역본. "spec/requirements.md" → "spec/requirements.en.md"
+func translationPath(ofCanonical wikiRel: String) -> String {
+    String(wikiRel.dropLast(3)) + TRANSLATION_SUFFIXES[0]
+}
+
+/// 번역본 → 정본. 접미사가 안 붙어 있으면 nil.
+func canonicalPath(ofTranslation wikiRel: String) -> String? {
+    for s in TRANSLATION_SUFFIXES where wikiRel.hasSuffix(s) {
+        return String(wikiRel.dropLast(s.count)) + ".md"
+    }
+    return nil
+}
+
 let TODAY: String = {
     let f = DateFormatter()
     f.dateFormat = "yyyy-MM-dd"
@@ -642,12 +685,36 @@ struct Doc {
     var sections: [Section] = []
 }
 
-/// kb/wiki 아래의 문서 전부. index.md와 log.md는 문서가 아니라 장치다.
-func loadDocs() -> [Doc] {
-    var out: [Doc] = []
+/// 그래프가 색인할 파일을 고른다. 짝이 있으면 번역본을, 없으면 정본을 싣는다.
+///
+/// 클로드가 읽는 것이 번역본이므로 색인 대상도 번역본이어야 한다. 그런데 짝마다 하나만
+/// 실어야 한다. 정본과 번역본이 같은 id를 갖는데 둘 다 실리면 buildGraph의
+/// Dictionary(uniqueKeysWithValues:)에서 죽는다.
+///
+/// 폴백이 있는 이유는 이관을 점진적으로 만들기 위해서다. 번역본이 없는 문서는 정본이
+/// 그대로 색인되므로 한 편씩 옮길 수 있다. 빠진 번역본은 cmdCheck가 크게 보고한다.
+func indexedWikiFiles() -> [(abs: String, rel: String)] {
+    var canonical: [String: String] = [:]      // wikiRel → abs
+    var translated: Set<String> = []           // 짝이 있는 정본의 wikiRel
+    var out: [(abs: String, rel: String)] = []
     for abs in walk(WIKI_DIR, ext: ".md") {
         let rel = relPath(abs, from: WIKI_DIR)
-        if rel == "index.md" || rel == "log.md" { continue }
+        switch classifyWiki(rel) {
+        case .apparatus: continue
+        case .canonical: canonical[rel] = abs
+        case .translation:
+            out.append((abs, rel))
+            if let c = canonicalPath(ofTranslation: rel) { translated.insert(c) }
+        }
+    }
+    for (rel, abs) in canonical where !translated.contains(rel) { out.append((abs, rel)) }
+    return out.sorted { $0.rel < $1.rel }
+}
+
+/// 색인 대상 문서 전부.
+func loadDocs() -> [Doc] {
+    var out: [Doc] = []
+    for (abs, rel) in indexedWikiFiles() {
         guard let text = readFile(abs) else { warn("읽지 못했습니다: \(rel)"); continue }
         let (fm, bodyStart) = parseFrontmatter(text: text, origin: "kb/wiki/" + rel)
         guard let fm else {
@@ -1286,10 +1353,11 @@ private let HEAD_SYM_RE = Rx("^#{1,3}[ \t]+((?:FR|NFR|T)-?[0-9]{1,2}[a-z]?)[.:]"
 func cmdImpact(_ rawPath: String) {
     var rel = relPath(rawPath.hasPrefix("/") ? rawPath : PROJECT_ROOT + "/" + rawPath, from: PROJECT_ROOT)
     if rel.hasPrefix("./") { rel = String(rel.dropFirst(2)) }
-    guard rel.hasPrefix("kb/wiki/"), rel.hasSuffix(".md") else { return }
+    // 장치(index.md·log.md)는 문서가 아니다. 예전에는 문서 노드를 못 찾아 우연히 돌아갔을 뿐이다.
+    guard let f = wikiFile(repoRel: rel), f.role != .apparatus else { return }
 
     let graph = loadGraph()
-    let wikiRel = String(rel.dropFirst("kb/wiki/".count))
+    let wikiRel = f.wikiRel
     guard let node = graph.nodes(ofType: "document").first(where: { ($0["path"] as? String) == wikiRel }),
           let docId = node["id"] as? String else { return }
 
@@ -1466,10 +1534,14 @@ private let FM_VERSION_RE = Rx("^version:[ \t]*\"?([0-9]+)\\.([0-9]+)\"?[ \t]*$"
 
 /// frontmatter의 version만 올린다. 본문에는 버전 줄이 없고, 만들지도 않는다.
 /// parents[].version은 들여쓰여 있어서 열 0 앵커에 걸리지 않는다.
+///
+/// 정본에만 돈다. 버전의 주인은 정본 하나다. 번역본의 version은 번역할 때 정본의 값을
+/// 베껴 적으므로, 번역이 밀리면 두 값이 어긋나고 그것이 cmdCheck의 신선도 판정 근거가 된다.
+/// 번역본이 스스로 올리면 그 어긋남이 가려진다.
 func cmdBump(_ rawPath: String) {
     var rel = relPath(rawPath.hasPrefix("/") ? rawPath : PROJECT_ROOT + "/" + rawPath, from: PROJECT_ROOT)
     if rel.hasPrefix("./") { rel = String(rel.dropFirst(2)) }
-    guard rel.hasPrefix("kb/wiki/"), rel.hasSuffix(".md") else { return }
+    guard wikiFile(repoRel: rel)?.role == .canonical else { return }
     let abs = PROJECT_ROOT + "/" + rel
     guard let text = readFile(abs) else { return }
     let (fm, bodyStart) = parseFrontmatter(text: text, origin: rel)
@@ -1514,9 +1586,17 @@ func cmdBump(_ rawPath: String) {
 
 // MARK: - 훅
 
-/// 훅 payload를 stdin으로 받아 bump → build → impact 순서로 돈다.
-/// 순서가 중요하다. 버전 범프는 그래프가 frontmatter를 읽기 전에 끝나야 하고,
-/// 영향 분석은 다시 만들어진 그래프를 읽어야 한다. jq는 쓰지 않는다.
+/// 훅 payload를 stdin으로 받아 파일의 역할에 따라 갈라진다. jq는 쓰지 않는다.
+///
+/// 정본이 바뀌면 버전을 올리고 번역 지시서를 낸다. 그래프와 영향 분석은 건드리지 않는다.
+/// 번역본이 바뀌면 그래프를 다시 만들고 영향을 분석한다. 버전은 건드리지 않는다.
+///
+/// 이 분기가 연쇄를 없앤다. 정본 편집은 영향 보고를 내지 않고, 그 뒤에 클로드가 번역본을
+/// 고치면 그때 보고가 한 번만 나온다. k_teacher는 파생본이 그래프 문서라서 훅이 반드시 두 번
+/// 돌고 두 번째를 휴리스틱으로 무시하는데, 여기서는 역할 하나로 그 문제가 사라진다.
+///
+/// 순서는 여전히 중요하다. 버전 범프는 그래프가 frontmatter를 읽기 전에 끝나야 하고,
+/// 영향 분석은 다시 만들어진 그래프를 읽어야 한다.
 func cmdHook() {
     let data = FileHandle.standardInput.readDataToEndOfFile()
     guard let o = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return }
@@ -1528,18 +1608,34 @@ func cmdHook() {
     var rel = relPath(path.hasPrefix("/") ? path : PROJECT_ROOT + "/" + path, from: PROJECT_ROOT)
     if rel.hasPrefix("./") { rel = String(rel.dropFirst(2)) }
 
-    let isWikiDoc = rel.hasPrefix("kb/wiki/") && rel.hasSuffix(".md")
-        && !rel.hasSuffix("/index.md") && !rel.hasSuffix("/log.md")
-    let isCode = rel.hasSuffix(".swift")
-        && CITE_ROOTS.contains { rel.hasPrefix($0 + "/") }
-    guard isWikiDoc || isCode else { return }
+    func rebuild() {
+        let r = buildGraph(quiet: true)
+        writeJSON(r.graph, to: GRAPH_PATH)
+        writeJSON(r.sections, to: SECTIONS_PATH)
+        if let t = r.tasks { writeJSON(t, to: TASKS_PATH) }
+    }
 
-    if isWikiDoc { cmdBump(rel) }
-    let r = buildGraph(quiet: true)
-    writeJSON(r.graph, to: GRAPH_PATH)
-    writeJSON(r.sections, to: SECTIONS_PATH)
-    if let t = r.tasks { writeJSON(t, to: TASKS_PATH) }
-    if isWikiDoc { cmdImpact(rel) }
+    if let f = wikiFile(repoRel: rel) {
+        switch f.role {
+        case .apparatus:
+            return
+        case .canonical:
+            cmdBump(rel)
+            // 번역본이 아직 없으면 이 정본이 색인 대상이다(loadDocs의 폴백). 그때는 예전처럼
+            // 그래프와 영향을 여기서 돌려야 한다. 번역본이 생기면 그 일은 번역본 쪽으로 넘어간다.
+            let tAbs = WIKI_DIR + "/" + translationPath(ofCanonical: f.wikiRel)
+            if FileManager.default.fileExists(atPath: tAbs) { return }
+            rebuild()
+            cmdImpact(rel)
+        case .translation:
+            rebuild()
+            cmdImpact(rel)
+        }
+        return
+    }
+
+    guard rel.hasSuffix(".swift"), CITE_ROOTS.contains(where: { rel.hasPrefix($0 + "/") }) else { return }
+    rebuild()
 }
 
 // MARK: - 자체 검사
@@ -1665,6 +1761,27 @@ func cmdSelftest() -> Never {
     let ranged = "---\nid: x\n---\n\n# 제목\n\n## 가\n본문\n\n## 나\n끝\n"
     let secs = parseSections(text: ranged, docId: "x", path: "x.md", bodyStart: 4)
     check("절: 줄 범위", secs.map { "\($0.heading):\($0.lineStart)-\($0.lineEnd)" }.joined(separator: ","), "가:7-9,나:10-11")
+
+    // 11. 정본·번역본·장치의 구분
+    func role(_ p: String) -> String {
+        switch classifyWiki(p) {
+        case .canonical: return "canonical"
+        case .translation: return "translation"
+        case .apparatus: return "apparatus"
+        }
+    }
+    check("역할: 정본", role("spec/requirements.md"), "canonical")
+    check("역할: 번역본", role("spec/requirements.en.md"), "translation")
+    check("역할: 최상위 index", role("index.md"), "apparatus")
+    // 예전에는 loadDocs가 최상위만 걸러서 이것이 그래프 문서가 되는데 훅은 장치로 보고 건너뛰었다.
+    check("역할: 하위 폴더 index", role("spec/index.md"), "apparatus")
+    check("역할: 하위 폴더 log", role("spec/log.md"), "apparatus")
+    check("역할: 뿌리 기준 경로", wikiFile(repoRel: "kb/wiki/spec/a.en.md").map { "\($0.wikiRel)|\(role($0.wikiRel))" } ?? "nil",
+          "spec/a.en.md|translation")
+    check("역할: wiki 밖", wikiFile(repoRel: "README.md") == nil ? "nil" : "있음", "nil")
+    check("짝: 정본 → 번역본", translationPath(ofCanonical: "spec/requirements.md"), "spec/requirements.en.md")
+    check("짝: 왕복", canonicalPath(ofTranslation: translationPath(ofCanonical: "research/x.md")) ?? "nil", "research/x.md")
+    check("짝: 접미사 없으면 nil", canonicalPath(ofTranslation: "spec/x.md") ?? "nil", "nil")
 
     print("\n\(pass + fail)건 중 \(pass) 통과, \(fail) 실패")
     exit(fail == 0 ? 0 : 1)
