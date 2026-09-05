@@ -221,6 +221,16 @@ struct Rx {
         re.matches(in: s, range: full(s)).map { caps($0, s) }
     }
 
+    /// 매치 전체가 차지한 자리까지 함께 준다. 여러 패턴을 같은 텍스트에 돌릴 때
+    /// 앞선 패턴이 이미 삼킨 자리를 뒤 패턴이 다시 잡지 않게 하려면 범위가 필요하다.
+    /// caps와 같은 이유로 Range(_:in:)를 거친다.
+    func allWithRange(_ s: String) -> [(caps: [String], range: Range<String.Index>)] {
+        re.matches(in: s, range: full(s)).compactMap { m in
+            guard let r = Range(m.range, in: s) else { return nil }
+            return (caps(m, s), r)
+        }
+    }
+
     func matches(_ s: String) -> Bool { re.firstMatch(in: s, range: full(s)) != nil }
 }
 
@@ -619,21 +629,52 @@ func annotateSymbols(_ sections: inout [Section]) {
 // MARK: - 상호 참조
 
 // 맨 N.N 은 이 저장소에서 소수(3.09초, 1.5초, 27.0)인 경우가 훨씬 많다.
-// 그래서 원본의 BARE_SECTION_RE를 버리고 단서가 붙은 세 형태만 본다.
-private let LABEL_REF_RE = Rx("(?<![A-Za-z0-9-])(REQUIREMENTS|requirements|요구사항|rename-measurements|acceptance-results)[ \t]*([0-9]{1,2}(?:\\.[0-9]+)*[a-z]?)(?:장|절)?")
+// 그래서 원본의 BARE_SECTION_RE를 버리고 단서가 붙은 형태만 본다. 영어 번역본에서는
+// 그 판단이 더 중요하다. macOS 13.4, Swift 6.3.3, v1.1이 전부 N.N 이기 때문이다.
+
+/// 이름표 목록을 DOC_LABELS에서 만든다. 예전에는 표와 패턴에 같은 목록이 따로 있어서,
+/// 문서를 하나 더 만들 때 한쪽만 고치면 그 문서로 가는 참조가 조용히 사라졌다.
+/// 긴 이름을 먼저 놓는다. ICU의 | 는 최장 일치가 아니라 왼쪽 우선이라, "requirements"가
+/// "requirements-v2"보다 앞서면 뒤엣것의 앞부분만 잘라 먹는다.
+/// DOC_LABELS(68) 뒤에 와야 한다. 스크립트 최상위 let은 소스 순서대로 실행된다.
+private let LABEL_REF_RE: Rx = {
+    let alts = DOC_LABELS.map { $0.0 }.sorted { $0.count > $1.count }
+        .map { NSRegularExpression.escapedPattern(for: $0) }.joined(separator: "|")
+    return Rx("(?<![A-Za-z0-9-])(" + alts + ")[ \t]*§?[ \t]*([0-9]{1,2}(?:\\.[0-9]+)*[a-z]?)(?:장|절)?")
+}()
 private let CHAPTER_REF_RE = Rx("(?<![0-9.])([0-9]{1,2})장")
 private let CUED_REF_RE = Rx("(?<![0-9.])([0-9]{1,2}(?:\\.[0-9]+)*[a-z]?)(?:절)?[ \t]*(?:참조|의[ \t])")
+/// 영어 번역본의 절 표기. § 는 이 코퍼스에 한 번도 나온 적이 없어 단서로 삼기에 안전하다.
+/// 영어 낱말 단서(see chapter 12)를 쓰지 않는 이유는 "see 12.1 seconds later" 같은 모양을
+/// 만들어 내기 때문이다.
+private let SIGIL_REF_RE = Rx("§[ \t]*([0-9]{1,2}(?:\\.[0-9]+)*[a-z]?)(?![0-9])")
 
 struct SectionRef { let toDoc: String; let num: String; let labelled: Bool }
 
+/// 이름표가 붙은 참조를 먼저 훑고, 그 자리를 나머지 패턴에서 뺀다.
+/// 그러지 않으면 "acceptance-results 2장"이 올바른 참조와 selfDoc#2 참조를 동시에 만든다.
+/// 없는 관계가 그래프에 들어가는 것이라, § 표기를 더하기 전에 반드시 고쳐야 했다.
 func findSectionRefs(text: String, selfDoc: String) -> [SectionRef] {
     var out: [SectionRef] = []
-    for c in LABEL_REF_RE.all(text) {
-        let doc = DOC_LABELS.first { $0.0 == c[1] }?.1 ?? selfDoc
-        out.append(SectionRef(toDoc: doc, num: c[2], labelled: true))
+    var claimed: [Range<String.Index>] = []
+    for m in LABEL_REF_RE.allWithRange(text) {
+        let doc = DOC_LABELS.first { $0.0 == m.caps[1] }?.1 ?? selfDoc
+        out.append(SectionRef(toDoc: doc, num: m.caps[2], labelled: true))
+        claimed.append(m.range)
     }
-    for c in CHAPTER_REF_RE.all(text) { out.append(SectionRef(toDoc: selfDoc, num: c[1], labelled: false)) }
-    for c in CUED_REF_RE.all(text) { out.append(SectionRef(toDoc: selfDoc, num: c[1], labelled: false)) }
+    func free(_ r: Range<String.Index>) -> Bool { !claimed.contains { $0.overlaps(r) } }
+    // § 는 이름표만큼 명시적이므로 labelled로 둔다. 이 깃발의 뜻은 "산문이 아니라 지시이므로
+    // 안 풀리면 결함"이고, cmdCheck가 그것을 오류로 올린다.
+    for m in SIGIL_REF_RE.allWithRange(text) where free(m.range) {
+        out.append(SectionRef(toDoc: selfDoc, num: m.caps[1], labelled: true))
+        claimed.append(m.range)
+    }
+    for m in CHAPTER_REF_RE.allWithRange(text) where free(m.range) {
+        out.append(SectionRef(toDoc: selfDoc, num: m.caps[1], labelled: false))
+    }
+    for m in CUED_REF_RE.allWithRange(text) where free(m.range) {
+        out.append(SectionRef(toDoc: selfDoc, num: m.caps[1], labelled: false))
+    }
     return out
 }
 
@@ -1782,6 +1823,24 @@ func cmdSelftest() -> Never {
     check("짝: 정본 → 번역본", translationPath(ofCanonical: "spec/requirements.md"), "spec/requirements.en.md")
     check("짝: 왕복", canonicalPath(ofTranslation: translationPath(ofCanonical: "research/x.md")) ?? "nil", "research/x.md")
     check("짝: 접미사 없으면 nil", canonicalPath(ofTranslation: "spec/x.md") ?? "nil", "nil")
+
+    // 12. 상호 참조. 한국어 표기가 살아 있는지, § 가 걸리는지, 이중 계상이 없는지.
+    func refs(_ t: String) -> String {
+        findSectionRefs(text: t, selfDoc: "requirements")
+            .map { "\($0.toDoc)#\($0.num)" }.joined(separator: ",")
+    }
+    check("참조: 이름표 + 장은 한 건", refs("acceptance-results 2장을 보라"), "acceptance-results#2")
+    check("참조: 한국어 이름표", refs("(요구사항 12.4a)"), "requirements#12.4a")
+    check("참조: 한국어 단서", refs("12.4a 참조"), "requirements#12.4a")
+    check("참조: 한국어 장", refs("7장 표에 반영"), "requirements#7")
+    check("참조: 시길", refs("see §12.4a"), "requirements#12.4a")
+    check("참조: 이름표 + 시길은 한 건", refs("requirements §12.1"), "requirements#12.1")
+    check("참조: 시길 두 개", refs("§12.1 and §12.1b"), "requirements#12.1,requirements#12.1b")
+    // 578-579의 판단은 영어에서 더 중요하다. 버전 번호가 전부 N.N 이다.
+    check("참조: 소수는 안 잡는다", refs("3.09 seconds"), "")
+    check("참조: 버전은 안 잡는다", refs("macOS 13.4 or later"), "")
+    check("참조: 시길은 labelled",
+          findSectionRefs(text: "§99.9", selfDoc: "requirements").first.map { String($0.labelled) } ?? "nil", "true")
 
     print("\n\(pass + fail)건 중 \(pass) 통과, \(fail) 실패")
     exit(fail == 0 ? 0 : 1)
