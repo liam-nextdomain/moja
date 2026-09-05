@@ -1268,6 +1268,39 @@ func runQuery(_ question: String, k: Int) -> (hits: [Hit], index: SectionIndex, 
         bodyOf[id] = ls[(a - 1)..<min(b, ls.count)].joined(separator: "\n")
     }
 
+    // 제목만 있고 본문이 없는 절은 읽을 것이 없다. 하위 절을 거느린 상위 절이 여기 해당한다.
+    // 한국어를 붙이기 **전에** 세야 한다. 붙인 뒤에 세면 빈 상위 절이 번역 본문 때문에
+    // 승격되어 읽을 것 없는 조각을 돌려준다.
+    let hasBody = Set(bodyOf.filter { _, body in
+        splitLines(body).dropFirst().contains { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
+    }.keys)
+
+    // 한국어 질의가 영어 색인에 걸리게 한다. 정본의 같은 번호 절 본문을 검색용 본문에만
+    // 덧붙인다. graph_sections.json에는 넣지 않는다. 그것은 git 추적 산출물이라 정본이
+    // 바뀔 때마다 요동치고, 줄 범위는 색인 대상 기준이어야 한다.
+    // 돌려주는 좌표는 언제나 번역본의 것이다. 클로드가 여는 것이 번역본이기 때문이다.
+    var koHeading: [String: String] = [:]
+    var koByPath: [String: [String: (heading: String, body: String)]] = [:]
+    for path in Set(index.sections.compactMap { $0["path"] as? String })
+    where classifyWiki(path) == .translation {
+        guard let cPath = canonicalPath(ofTranslation: path),
+              let text = readFile(WIKI_DIR + "/" + cPath) else { continue }
+        let (_, bodyStart) = parseFrontmatter(text: text, origin: cPath)
+        let ls = splitLines(text)
+        var m: [String: (heading: String, body: String)] = [:]
+        for s in parseSections(text: text, docId: "x", path: cPath, bodyStart: bodyStart) {
+            guard let num = s.num, s.lineStart >= 1, s.lineStart <= ls.count else { continue }
+            m[num] = (s.heading, ls[(s.lineStart - 1)..<min(s.lineEnd, ls.count)].joined(separator: "\n"))
+        }
+        koByPath[path] = m
+    }
+    for s in index.sections {
+        guard let id = s["id"] as? String, let path = s["path"] as? String,
+              let num = s["num"] as? String, let ko = koByPath[path]?[num] else { continue }
+        bodyOf[id] = (bodyOf[id] ?? "") + "\n" + ko.body
+        koHeading[id] = ko.heading
+    }
+
     let tokens = tokenize(question)
     let n = max(index.sections.count, 1)
     var scores: [String: Double] = [:]
@@ -1291,7 +1324,10 @@ func runQuery(_ question: String, k: Int) -> (hits: [Hit], index: SectionIndex, 
                 let norm = 1 - b + b * ((lengths[id] ?? avgLen) / avgLen)
                 scores[id, default: 0] += t.weight * idf * (f * (k1 + 1)) / (f + k1 * norm)
             }
-            if let h = s["heading"] as? String, h.lowercased().contains(t.text) {
+            // 제목 가산점은 양쪽 언어를 본다. 색인의 heading은 번역본의 것이라
+            // 한국어 질의어가 여기서 4배를 못 받는다.
+            let heads = [s["heading"] as? String, koHeading[id]].compactMap { $0 }
+            if heads.contains(where: { $0.lowercased().contains(t.text) }) {
                 scores[id, default: 0] += t.weight * 4.0 * idf
             }
         }
@@ -1348,11 +1384,6 @@ func runQuery(_ question: String, k: Int) -> (hits: [Hit], index: SectionIndex, 
         for (t, v) in targets { bonus[t, default: 0] += v }
     }
     for (id, b) in bonus { scores[id, default: 0] += b }
-
-    // 제목만 있고 본문이 없는 절은 읽을 것이 없다. 하위 절을 거느린 상위 절이 여기 해당한다.
-    let hasBody = Set(bodyOf.filter { _, body in
-        splitLines(body).dropFirst().contains { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
-    }.keys)
 
     let hits = scores.filter { $0.value > 0 && hasBody.contains($0.key) }
         .sorted { ($0.value, $1.key) > ($1.value, $0.key) }
