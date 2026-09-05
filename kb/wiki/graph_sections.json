@@ -570,10 +570,11 @@
       "symbols_mentioned": []
     },
     {
-      "id": "requirements#전송-경로-검증-readme용-앱-자체-기능-아님",
+      "id": "requirements#7.1",
       "doc": "requirements",
       "path": "spec/requirements.md",
       "level": 3,
+      "num": "7.1",
       "heading": "전송 경로 검증 (README용, 앱 자체 기능 아님)",
       "line_start": 349,
       "line_end": 368,
@@ -2296,7 +2297,7 @@
     },
     {
       "from": "requirements",
-      "to": "requirements#전송-경로-검증-readme용-앱-자체-기능-아님",
+      "to": "requirements#7.1",
       "relation": "contains"
     },
     {

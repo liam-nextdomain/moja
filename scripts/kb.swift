@@ -1535,6 +1535,11 @@ func cmdCheck() -> Never {
                 problems.append("kb/wiki/\(d.path): 엔티티 `\(e.str("name") ?? "?")`의 code 경로가 없습니다: \(p)")
             }
         }
+        // 번호 없는 제목은 슬러그로 id가 만들어져 언어에 묶인다. 그러면 정본과 번역본을
+        // 번호로 짝지을 수 없다. 매니페스트의 지목, 질의 붙이기, 구조 대조가 전부 번호에 걸려 있다.
+        for s in d.sections where s.num == nil {
+            problems.append("kb/wiki/\(d.path) \(s.id): 번호 없는 제목이라 짝을 지을 수 없습니다: \(s.heading)")
+        }
     }
 
     // 선언된 곳이 없는 심볼. 첫 빌드에서 requirements의 FR-14가 걸린다.

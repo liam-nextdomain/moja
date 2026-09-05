@@ -2,8 +2,8 @@
 id: requirements
 title: "macOS 한글 파일명 자동 NFC 변환 메뉴바 앱: v1 요구사항"
 type: requirements
-version: "1.1"
-date: "2026-09-05"
+version: "1.2"
+date: "2026-09-06"
 parents: []
 entities:
   - name: NFD
@@ -346,7 +346,7 @@ touch "$(printf '한글 문서.txt' | iconv -f utf-8 -t utf-8-mac)"
 | T15 | 감시 24시간 방치 | 메모리 30MB 이하 유지, 크래시 없음 |
 | T16 | 변환된 파일을 zip으로 압축해 Windows에서 열기 | 한글 정상 표시 |
 
-### 전송 경로 검증 (README용, 앱 자체 기능 아님)
+### 7.1 전송 경로 검증 (README용, 앱 자체 기능 아님)
 
 변환된 NFC 파일을 아래 경로로 보냈을 때 받는 쪽(Windows)에서 정상인지 표로 기록한다.
 이 표는 README에 그대로 들어간다.
