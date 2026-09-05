@@ -29,10 +29,10 @@
       "id": "rename-measurements",
       "type": "document",
       "doc_type": "measurement",
-      "title": "`rename(2)` 저장 정규화 실측",
+      "title": "Measuring what `rename(2)` stores",
       "version": "1.0",
       "date": "2026-09-05",
-      "path": "research/rename-measurements.md",
+      "path": "research/rename-measurements.en.md",
       "tags": [
         "measurement",
         "filesystem",
@@ -83,49 +83,49 @@
       "id": "renamex_np",
       "type": "entity",
       "entity_type": "api",
-      "definition": "RENAME_EXCL 플래그를 붙이는 POSIX rename 확장. APFS에서는 정규화 무시 볼륨인데도 EEXIST 없이 성공하며 저장 바이트를 NFC로 바꾼다. exFAT은 ENOTSUP(45), HFS+는 EEXIST(17)를 돌려준다"
+      "definition": "POSIX rename extension taking a RENAME_EXCL flag. on APFS it succeeds without EEXIST even though the volume ignores normalization, and rewrites the stored bytes as NFC. exFAT returns ENOTSUP(45) and HFS+ returns EEXIST(17)"
     },
     {
       "id": "guarded-move",
       "type": "entity",
       "entity_type": "mechanism",
-      "definition": "EEXIST·ENOTSUP 처리와 inode 비교를 한 함수로 묶어 첫 시도와 2단계 폴백 양쪽에서 쓰는 이름 변경 관문. 폴백이 renamex_np만 쓰면 exFAT에서 임시 이름 단계부터 ENOTSUP으로 죽어 '지원 안 함'이 아니라 일반 실패로 보고되고 영원히 재시도한다"
+      "definition": "the rename gate that folds EEXIST/ENOTSUP handling and the inode comparison into one function used by both the first attempt and the two-step fallback. a fallback using only renamex_np dies on exFAT at the temporary-name step with ENOTSUP, so it reports a plain failure instead of 'unsupported' and retries forever"
     },
     {
       "id": "file-identity",
       "type": "entity",
       "entity_type": "mechanism",
-      "definition": "(st_dev, st_ino) 쌍. 목적지가 같은 파일인지 진짜 충돌인지 가르는 기준이고, 심볼릭 링크가 풀린 경로와 원래 경로로 같은 폴더가 두 번 들어오는 것을 거르는 기준이기도 하다"
+      "definition": "the (st_dev, st_ino) pair. it decides whether a destination is the same file or a real collision, and it also filters out the same folder arriving twice, once by its resolved path and once by the symlink"
     },
     {
       "id": "volume-capability-probe",
       "type": "entity",
       "entity_type": "mechanism",
-      "definition": "볼륨당 한 번, 대상 폴더에 NFC 이름의 숨김 임시 파일을 만들어 저장 형태를 확인하고 즉시 지운 뒤 st_dev 기준으로 캐시하는 실측. f_fstypename 문자열 판별은 SMB가 서버 구현에 좌우되고 드라이버도 바뀔 수 있어 쓰지 않는다"
+      "definition": "a once-per-volume measurement: create a hidden temporary file with an NFC name in the target directory, read back the stored form, delete it immediately, and cache the answer by st_dev. matching on the f_fstypename string is not used because SMB depends on the server implementation and drivers change"
     },
     {
       "id": "unsupported-volume",
       "type": "entity",
       "entity_type": "concept",
-      "definition": "HFS+·exFAT처럼 커널 드라이버가 이름을 강제로 NFD로 되돌려, NFC로 직접 만들어도 NFD로 저장되므로 어떤 전략으로도 변환할 수 없는 볼륨. '지원하지 않습니다'로 표시하고 건드리지 않는다"
+      "definition": "a volume such as HFS+ or exFAT whose kernel driver forces names back to NFD, so that even creating an NFC name directly stores NFD and no strategy can convert it. shown as 'not supported' and left alone"
     },
     {
       "id": "banned-foundation-api",
       "type": "entity",
       "entity_type": "constraint",
-      "definition": "FileManager.moveItem, createFile(atPath:), NSString.fileSystemRepresentation, URL.withUnsafeFileSystemRepresentation. 경로를 NFD로 분해하므로 실패하는 것이 아니라 성공하면서 NFD를 쓴다. 읽기(디렉터리 열거)는 안전하다"
+      "definition": "FileManager.moveItem, createFile(atPath:), NSString.fileSystemRepresentation, URL.withUnsafeFileSystemRepresentation. they decompose the path to NFD, so they do not fail: they succeed while writing NFD. reading (directory enumeration) is safe"
     },
     {
       "id": "zsh-globbing-trap",
       "type": "entity",
       "entity_type": "concept",
-      "definition": "zsh가 글로빙 결과를 NFC로 정규화해 `cp staging/* watched/` 같은 명령이 NFD 이름을 NFC로 바꿔서 복사하는 함정. 파일 이름 검증을 셸로 준비하면 안 되는 이유다"
+      "definition": "zsh normalizes globbing results to NFC, so a command like `cp staging/* watched/` copies NFD names as NFC. this is why a file name test must never be prepared through the shell"
     },
     {
       "id": "probe-volume",
       "type": "entity",
       "entity_type": "script",
-      "definition": "새 볼륨을 마운트한 뒤 경로만 넘기면 1절의 표를 다시 만드는 측정 스크립트. Foundation의 경로 변환을 일절 거치지 않는다"
+      "definition": "the measurement script that rebuilds the §1 table once a new volume is mounted and its path is passed in. it never goes through Foundation's path conversion"
     },
     {
       "id": "NFD",
@@ -455,7 +455,7 @@
         "6",
         "11"
       ],
-      "note": "FR-3의 전제인 'rename(2)가 저장된 바이트를 바꾸는가'를 실측으로 확인한 문서"
+      "note": "measures the premise behind FR-3: whether rename(2) changes the bytes on disk"
     },
     {
       "from": "acceptance-results",

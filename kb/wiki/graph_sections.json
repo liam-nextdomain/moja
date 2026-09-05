@@ -6,7 +6,7 @@
   "stats": {
     "sections": 57,
     "symbols": 28,
-    "edges": 326
+    "edges": 327
   },
   "sections": [
     {
@@ -123,60 +123,60 @@
     {
       "id": "rename-measurements#1",
       "doc": "rename-measurements",
-      "path": "research/rename-measurements.md",
+      "path": "research/rename-measurements.en.md",
       "level": 2,
       "num": "1",
-      "heading": "결론 요약",
-      "line_start": 68,
-      "line_end": 83,
+      "heading": "Summary",
+      "line_start": 72,
+      "line_end": 87,
       "symbols_declared": [],
       "symbols_mentioned": []
     },
     {
       "id": "rename-measurements#2",
       "doc": "rename-measurements",
-      "path": "research/rename-measurements.md",
+      "path": "research/rename-measurements.en.md",
       "level": 2,
       "num": "2",
-      "heading": "항목별 결과",
-      "line_start": 84,
-      "line_end": 85,
+      "heading": "Results by item",
+      "line_start": 88,
+      "line_end": 89,
       "symbols_declared": [],
       "symbols_mentioned": []
     },
     {
       "id": "rename-measurements#2.1",
       "doc": "rename-measurements",
-      "path": "research/rename-measurements.md",
+      "path": "research/rename-measurements.en.md",
       "level": 3,
       "num": "2.1",
-      "heading": "APFS: 전부 통과",
-      "line_start": 86,
-      "line_end": 103,
+      "heading": "APFS: everything passes",
+      "line_start": 90,
+      "line_end": 108,
       "symbols_declared": [],
       "symbols_mentioned": []
     },
     {
       "id": "rename-measurements#2.2",
       "doc": "rename-measurements",
-      "path": "research/rename-measurements.md",
+      "path": "research/rename-measurements.en.md",
       "level": 3,
       "num": "2.2",
-      "heading": "HFS+: 변환 불가",
-      "line_start": 104,
-      "line_end": 110,
+      "heading": "HFS+: cannot convert",
+      "line_start": 109,
+      "line_end": 115,
       "symbols_declared": [],
       "symbols_mentioned": []
     },
     {
       "id": "rename-measurements#2.3",
       "doc": "rename-measurements",
-      "path": "research/rename-measurements.md",
+      "path": "research/rename-measurements.en.md",
       "level": 3,
       "num": "2.3",
-      "heading": "exFAT: 변환 불가 (예상과 달랐음)",
-      "line_start": 111,
-      "line_end": 128,
+      "heading": "exFAT: cannot convert (contrary to expectation)",
+      "line_start": 116,
+      "line_end": 134,
       "symbols_declared": [],
       "symbols_mentioned": [
         "T16"
@@ -185,24 +185,24 @@
     {
       "id": "rename-measurements#2.4",
       "doc": "rename-measurements",
-      "path": "research/rename-measurements.md",
+      "path": "research/rename-measurements.en.md",
       "level": 3,
       "num": "2.4",
-      "heading": "함정: 셸이 거짓말을 한다",
-      "line_start": 129,
-      "line_end": 138,
+      "heading": "The trap: the shell lies",
+      "line_start": 135,
+      "line_end": 144,
       "symbols_declared": [],
       "symbols_mentioned": []
     },
     {
       "id": "rename-measurements#3",
       "doc": "rename-measurements",
-      "path": "research/rename-measurements.md",
+      "path": "research/rename-measurements.en.md",
       "level": 2,
       "num": "3",
-      "heading": "Foundation을 어디까지 믿을 수 있는가 ⚠️",
-      "line_start": 139,
-      "line_end": 166,
+      "heading": "How far Foundation can be trusted ⚠️",
+      "line_start": 145,
+      "line_end": 171,
       "symbols_declared": [],
       "symbols_mentioned": [
         "FR-3"
@@ -211,24 +211,24 @@
     {
       "id": "rename-measurements#4",
       "doc": "rename-measurements",
-      "path": "research/rename-measurements.md",
+      "path": "research/rename-measurements.en.md",
       "level": 2,
       "num": "4",
-      "heading": "설계에 반영할 것",
-      "line_start": 167,
-      "line_end": 168,
+      "heading": "What the design takes from this",
+      "line_start": 172,
+      "line_end": 173,
       "symbols_declared": [],
       "symbols_mentioned": []
     },
     {
       "id": "rename-measurements#4.1",
       "doc": "rename-measurements",
-      "path": "research/rename-measurements.md",
+      "path": "research/rename-measurements.en.md",
       "level": 3,
       "num": "4.1",
-      "heading": "이름 변경 순서 (FR-3 / requirements 12.1 갱신)",
-      "line_start": 169,
-      "line_end": 191,
+      "heading": "Rename order (FR-3, updates requirements §12.1)",
+      "line_start": 174,
+      "line_end": 197,
       "symbols_declared": [],
       "symbols_mentioned": [
         "FR-3"
@@ -237,36 +237,36 @@
     {
       "id": "rename-measurements#4.2",
       "doc": "rename-measurements",
-      "path": "research/rename-measurements.md",
+      "path": "research/rename-measurements.en.md",
       "level": 3,
       "num": "4.2",
-      "heading": "볼륨 능력 판별 (신규)",
-      "line_start": 192,
-      "line_end": 206,
+      "heading": "Volume capability probe (new)",
+      "line_start": 198,
+      "line_end": 212,
       "symbols_declared": [],
       "symbols_mentioned": []
     },
     {
       "id": "rename-measurements#4.3",
       "doc": "rename-measurements",
-      "path": "research/rename-measurements.md",
+      "path": "research/rename-measurements.en.md",
       "level": 3,
       "num": "4.3",
-      "heading": "금지 목록",
-      "line_start": 207,
-      "line_end": 219,
+      "heading": "The banned list",
+      "line_start": 213,
+      "line_end": 225,
       "symbols_declared": [],
       "symbols_mentioned": []
     },
     {
       "id": "rename-measurements#5",
       "doc": "rename-measurements",
-      "path": "research/rename-measurements.md",
+      "path": "research/rename-measurements.en.md",
       "level": 2,
       "num": "5",
-      "heading": "남은 미측정 항목",
-      "line_start": 220,
-      "line_end": 229,
+      "heading": "Still unmeasured",
+      "line_start": 226,
+      "line_end": 235,
       "symbols_declared": [],
       "symbols_mentioned": [
         "T11"
@@ -1874,6 +1874,11 @@
       "from": "acceptance-results#1",
       "to": "T16",
       "relation": "declares"
+    },
+    {
+      "from": "acceptance-results#1",
+      "to": "requirements#12.4a",
+      "relation": "references"
     },
     {
       "from": "acceptance-results#1",
