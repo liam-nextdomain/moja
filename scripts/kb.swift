@@ -1727,8 +1727,9 @@ func cmdSync(_ rawPath: String) {
 
     // parseSections는 bodyStart부터 첫 ## 까지의 머리말을 어느 절에도 넣지 않는다.
     // 그래서 머리말만 고치면 changed_sections가 비어 번역할 것이 없다고 나온다.
+    // frontmatter는 머리말이 아니다. bodyStart 앞을 세면 버전 범프가 늘 머리말 변경으로 잡힌다.
     let firstSectionLine = secs.first?.lineStart ?? Int.max
-    let preambleTouched = dd.touchedLines.filter { $0 < firstSectionLine }.sorted()
+    let preambleTouched = dd.touchedLines.filter { $0 >= bodyStart && $0 < firstSectionLine }.sorted()
     let preambleChanged = !preambleTouched.isEmpty
 
     guard !changed.isEmpty || preambleChanged || dd.structural else { return }
