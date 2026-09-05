@@ -782,6 +782,86 @@ func loadDocs() -> [Doc] {
     return out.sorted { $0.id < $1.id }
 }
 
+// MARK: - 짝 대조
+
+/// 정본 한 편과 그 번역본. Doc이 아닌 이유는 Doc의 모든 필드가 graph.json 노드의 속성이
+/// 되는데 여기서 필요한 것은 대조뿐이기 때문이다. 고아 번역본은 canonical이 비어 있다.
+struct WikiPair {
+    let canonical: String            // kb/wiki 기준. 고아면 ""
+    let translation: String          // kb/wiki 기준. 없으면 ""
+    let canonicalFM: FMMap?
+    let translationFM: FMMap?
+    let canonicalNums: [String]
+    let translationNums: [String]
+}
+
+private func readPairSide(_ wikiRel: String) -> (FMMap?, [String]) {
+    let abs = WIKI_DIR + "/" + wikiRel
+    guard let text = readFile(abs) else { return (nil, []) }
+    let (fm, bodyStart) = parseFrontmatter(text: text, origin: "kb/wiki/" + wikiRel)
+    let secs = parseSections(text: text, docId: "x", path: wikiRel, bodyStart: bodyStart)
+    return (fm, secs.compactMap { $0.num })
+}
+
+/// kb/wiki의 정본과 번역본을 짝지어 준다. 장치(index.md·log.md)는 빼고,
+/// 정본이 없는 번역본은 고아로 따로 담는다.
+func loadWikiPairs() -> [WikiPair] {
+    var canonicals: [String] = []
+    var translations: Set<String> = []
+    for abs in walk(WIKI_DIR, ext: ".md") {
+        let rel = relPath(abs, from: WIKI_DIR)
+        switch classifyWiki(rel) {
+        case .apparatus: continue
+        case .canonical: canonicals.append(rel)
+        case .translation: translations.insert(rel)
+        }
+    }
+    var out: [WikiPair] = []
+    for c in canonicals.sorted() {
+        let t = translationPath(ofCanonical: c)
+        let has = translations.contains(t)
+        if has { translations.remove(t) }
+        let (cfm, cnums) = readPairSide(c)
+        let (tfm, tnums) = has ? readPairSide(t) : (nil, [])
+        out.append(WikiPair(canonical: c, translation: has ? t : "",
+                            canonicalFM: cfm, translationFM: tfm,
+                            canonicalNums: cnums, translationNums: tnums))
+    }
+    for orphan in translations.sorted() {
+        let (tfm, tnums) = readPairSide(orphan)
+        out.append(WikiPair(canonical: "", translation: orphan,
+                            canonicalFM: nil, translationFM: tfm,
+                            canonicalNums: [], translationNums: tnums))
+    }
+    return out
+}
+
+/// 번역이 정본을 따라잡았는가. cmdCheck가 -> Never 라 검사할 수 없어서 판정만 뺐다.
+func translationStatus(sourceVersion: String, canonicalVersion: String) -> String {
+    if sourceVersion.isEmpty || canonicalVersion.isEmpty { return "unknown" }
+    return sourceVersion == canonicalVersion ? "ok" : "stale"
+}
+
+/// frontmatter의 구조 항목만 비교한다. title·note·definition은 언어가 달라 보지 않는다.
+/// 이 항목들이 어긋나면 번역본이 그래프에 넣는 관계가 정본이 정한 것과 달라진다.
+func frontmatterMismatches(canonical c: FMMap, translation t: FMMap) -> [String] {
+    var out: [String] = []
+    for key in ["id", "type", "date"] {
+        let a = c.str(key) ?? "", b = t.str(key) ?? ""
+        if a != b { out.append("\(key): 정본 \"\(a)\" ≠ 번역본 \"\(b)\"") }
+    }
+    func parentSig(_ m: FMMap) -> [String] {
+        m.maps("parents").map { "\($0.str("id") ?? "")|\($0.str("version") ?? "")|\($0.strs("sections").joined(separator: "+"))" }
+    }
+    func entitySig(_ m: FMMap) -> [String] {
+        m.maps("entities").map { "\($0.str("name") ?? "")|\($0.str("type") ?? "")|\($0.strs("code").joined(separator: "+"))" }
+    }
+    if parentSig(c) != parentSig(t) { out.append("parents가 다릅니다") }
+    if entitySig(c) != entitySig(t) { out.append("entities가 다릅니다 (이름·타입·code는 복제해야 합니다)") }
+    if c.strs("tags") != t.strs("tags") { out.append("tags가 다릅니다") }
+    return out
+}
+
 // MARK: - 코드 훑기
 
 /// 주석 줄인가. cites는 주석에서만 캔다. 식별자가 T10처럼 생겼을 수 있어서다.
@@ -1568,6 +1648,41 @@ func cmdCheck() -> Never {
         }
     }
 
+    // 정본과 번역본의 짝. 클로드가 번역본을 읽으므로 번역이 밀리면 낡은 지식을 읽게 된다.
+    // 그것을 알아채는 자리가 여기뿐이라 경고가 아니라 오류로 올린다.
+    for p in loadWikiPairs() {
+        if p.canonical.isEmpty {
+            problems.append("kb/wiki/\(p.translation): 정본이 없는 번역본입니다")
+            continue
+        }
+        guard !p.translation.isEmpty else {
+            problems.append("kb/wiki/\(p.canonical): 영어 번역본이 없습니다 (\(translationPath(ofCanonical: p.canonical)))")
+            continue
+        }
+        let cv = p.canonicalFM?.str("version") ?? ""
+        let tv = p.translationFM?.str("version") ?? ""
+        switch translationStatus(sourceVersion: tv, canonicalVersion: cv) {
+        case "stale":
+            problems.append("kb/wiki/\(p.translation): 번역이 v\(tv)에 머물러 있습니다. 정본은 v\(cv)입니다")
+        case "unknown":
+            problems.append("kb/wiki/\(p.translation): version을 읽을 수 없습니다 (정본 \"\(cv)\", 번역본 \"\(tv)\")")
+        default: break
+        }
+        // 번호 집합이 어긋나면 번역 지시서의 절 지목과 질의 붙이기가 조용히 깨진다.
+        let cs = Set(p.canonicalNums), ts = Set(p.translationNums)
+        for n in cs.subtracting(ts).sorted() {
+            problems.append("kb/wiki/\(p.translation): 번역본에 없는 절입니다: \(n)")
+        }
+        for n in ts.subtracting(cs).sorted() {
+            problems.append("kb/wiki/\(p.translation): 정본에 없는 절입니다: \(n)")
+        }
+        if let c = p.canonicalFM, let t = p.translationFM {
+            for m in frontmatterMismatches(canonical: c, translation: t) {
+                problems.append("kb/wiki/\(p.translation): frontmatter가 정본과 다릅니다 — \(m)")
+            }
+        }
+    }
+
     if problems.isEmpty { print("✅ 끊긴 참조 없음 (문서 \(r.docs.count)개)"); exit(0) }
     for p in orderedUnique(problems) { print("❌ " + p) }
     print("\n\(orderedUnique(problems).count)건")
@@ -1846,6 +1961,43 @@ func cmdSelftest() -> Never {
     check("참조: 버전은 안 잡는다", refs("macOS 13.4 or later"), "")
     check("참조: 시길은 labelled",
           findSectionRefs(text: "§99.9", selfDoc: "requirements").first.map { String($0.labelled) } ?? "nil", "true")
+
+    // 13. 번역 신선도
+    check("신선도: 따라잡음", translationStatus(sourceVersion: "1.1", canonicalVersion: "1.1"), "ok")
+    check("신선도: 뒤처짐", translationStatus(sourceVersion: "1.0", canonicalVersion: "1.1"), "stale")
+    check("신선도: 읽을 수 없음", translationStatus(sourceVersion: "", canonicalVersion: "1.1"), "unknown")
+
+    // 14. frontmatter 대조. 산문은 언어가 다르므로 어긋나도 문제가 아니다.
+    let fmKo = """
+    id: requirements
+    type: requirements
+    date: "2026-09-06"
+    title: "한국어 제목"
+    parents:
+      - id: plan
+        version: "1.0"
+        sections: ["7", "12.4a"]
+        note: "한국어 설명"
+    entities:
+      - name: overflow-guard
+        type: mechanism
+        definition: "한국어 정의"
+        code: [App/A.swift]
+    tags: [a, b]
+    """
+    let fmEn = fmKo
+        .replacingOccurrences(of: "한국어 제목", with: "English title")
+        .replacingOccurrences(of: "한국어 설명", with: "English note")
+        .replacingOccurrences(of: "한국어 정의", with: "English definition")
+    let ko = parseFrontmatterLines(splitLines(fmKo), origin: "ko")!
+    let en = parseFrontmatterLines(splitLines(fmEn), origin: "en")!
+    check("frontmatter: 산문만 다르면 통과", frontmatterMismatches(canonical: ko, translation: en).count.description, "0")
+    let enBad = parseFrontmatterLines(splitLines(fmEn.replacingOccurrences(of: "overflow-guard", with: "overflow-guard-2")), origin: "en")!
+    check("frontmatter: 엔티티 이름이 다르면 걸린다",
+          frontmatterMismatches(canonical: ko, translation: enBad).joined(separator: ";").contains("entities") ? "걸림" : "안 걸림", "걸림")
+    let enBad2 = parseFrontmatterLines(splitLines(fmEn.replacingOccurrences(of: "\"12.4a\"", with: "\"12.4b\"")), origin: "en")!
+    check("frontmatter: parents sections가 다르면 걸린다",
+          frontmatterMismatches(canonical: ko, translation: enBad2).joined(separator: ";").contains("parents") ? "걸림" : "안 걸림", "걸림")
 
     print("\n\(pass + fail)건 중 \(pass) 통과, \(fail) 실패")
     exit(fail == 0 ? 0 : 1)
