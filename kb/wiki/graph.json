@@ -335,8 +335,8 @@
       "type": "code",
       "lang": "swift",
       "entities": [
-        "file-identity",
-        "renamex_np"
+        "renamex_np",
+        "file-identity"
       ]
     },
     {
@@ -344,11 +344,11 @@
       "type": "code",
       "lang": "swift",
       "entities": [
-        "skip-rule",
-        "stability-window",
+        "planner",
         "overflow-guard",
-        "package-boundary",
-        "planner"
+        "stability-window",
+        "skip-rule",
+        "package-boundary"
       ]
     },
     {
@@ -356,9 +356,9 @@
       "type": "code",
       "lang": "swift",
       "entities": [
+        "renamex_np",
         "guarded-move",
-        "renamer",
-        "renamex_np"
+        "renamer"
       ]
     },
     {
@@ -366,8 +366,8 @@
       "type": "code",
       "lang": "swift",
       "entities": [
-        "scanner",
         "file-identity",
+        "scanner",
         "package-boundary"
       ]
     },
@@ -679,22 +679,17 @@
     },
     {
       "from": "CoreKit/Sources/CoreKit/POSIXFile.swift",
-      "to": "file-identity",
-      "relation": "implements"
-    },
-    {
-      "from": "CoreKit/Sources/CoreKit/POSIXFile.swift",
       "to": "renamex_np",
       "relation": "implements"
     },
     {
-      "from": "CoreKit/Sources/CoreKit/Planner.swift",
-      "to": "skip-rule",
+      "from": "CoreKit/Sources/CoreKit/POSIXFile.swift",
+      "to": "file-identity",
       "relation": "implements"
     },
     {
       "from": "CoreKit/Sources/CoreKit/Planner.swift",
-      "to": "stability-window",
+      "to": "planner",
       "relation": "implements"
     },
     {
@@ -704,12 +699,22 @@
     },
     {
       "from": "CoreKit/Sources/CoreKit/Planner.swift",
-      "to": "package-boundary",
+      "to": "stability-window",
       "relation": "implements"
     },
     {
       "from": "CoreKit/Sources/CoreKit/Planner.swift",
-      "to": "planner",
+      "to": "skip-rule",
+      "relation": "implements"
+    },
+    {
+      "from": "CoreKit/Sources/CoreKit/Planner.swift",
+      "to": "package-boundary",
+      "relation": "implements"
+    },
+    {
+      "from": "CoreKit/Sources/CoreKit/Renamer.swift",
+      "to": "renamex_np",
       "relation": "implements"
     },
     {
@@ -723,18 +728,13 @@
       "relation": "implements"
     },
     {
-      "from": "CoreKit/Sources/CoreKit/Renamer.swift",
-      "to": "renamex_np",
+      "from": "CoreKit/Sources/CoreKit/Scanner.swift",
+      "to": "file-identity",
       "relation": "implements"
     },
     {
       "from": "CoreKit/Sources/CoreKit/Scanner.swift",
       "to": "scanner",
-      "relation": "implements"
-    },
-    {
-      "from": "CoreKit/Sources/CoreKit/Scanner.swift",
-      "to": "file-identity",
       "relation": "implements"
     },
     {

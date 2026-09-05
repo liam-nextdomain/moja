@@ -746,8 +746,10 @@ func buildGraph(quiet: Bool = false) -> (docs: [Doc], graph: J, sections: J, tas
 
     // 노드: 코드. frontmatter의 entities[].code가 진실이다. 소스에 마커를 심지 않는다.
     var codeEntities: [String: [String]] = [:]
-    for (name, paths) in entityCode {
-        for p in paths {
+    // entityOrder를 돈다. Dictionary 순회 순서는 실행마다 달라서, 그 위를 돌면 코드 노드의
+    // entities 배열이 매번 뒤섞이고 graph.json이 아무 이유 없이 diff에 뜬다.
+    for name in entityOrder {
+        for p in entityCode[name] ?? [] {
             if !FileManager.default.fileExists(atPath: PROJECT_ROOT + "/" + p) {
                 warn("엔티티 `\(name)`의 code 경로가 없습니다: \(p). 파일이 옮겨졌는지 보세요")
                 continue
