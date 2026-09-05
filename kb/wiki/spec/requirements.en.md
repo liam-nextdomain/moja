@@ -2,7 +2,7 @@
 id: requirements
 title: "macOS menu bar app that converts Korean file names to NFC: v1 requirements"
 type: requirements
-version: "1.2"
+version: "1.3"
 date: "2026-09-06"
 lang: en
 parents: []
@@ -525,8 +525,8 @@ in the target directory, check the stored form, delete it immediately, and cache
 `st_dev`. Matching on the `f_fstypename` string is not used, because it can depend on the server
 implementation, as with SMB.
 
-An unsupported volume is shown as `이 디스크는 변환을 지원하지 않습니다`
-("this disk does not support conversion") and skipped.
+An unsupported volume is shown as `이 디스크(exFAT)는 변환을 지원하지 않습니다`
+("this disk (exFAT) does not support conversion") and skipped.
 
 ### 12.2 FR-2: `NSWorkspace` is not used for package detection
 
@@ -604,7 +604,7 @@ same factor. `Scanner` filters duplicates by ``FileIdentity`` (`st_dev`, `st_ino
 
 **On HFS+ and exFAT the kernel forces file names back to NFD.** Even creating the name directly as
 NFC stores NFD, so no rename strategy can work. The volume capability probe of §12.1b filters them
-out, showing `이 디스크는 변환을 지원하지 않습니다` and skipping them.
+out, showing `이 디스크(exFAT)는 변환을 지원하지 않습니다` and skipping them.
 
 This directly affects the **USB flash drive, exFAT** row of the transfer path table. Copying a file
 converted to NFC onto an exFAT USB stick makes macOS store NFD again. Moja cannot fix it, so it is

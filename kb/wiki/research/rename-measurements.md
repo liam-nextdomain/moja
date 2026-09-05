@@ -2,8 +2,8 @@
 id: rename-measurements
 title: "`rename(2)` 저장 정규화 실측"
 type: measurement
-version: "1.0"
-date: "2026-09-05"
+version: "1.1"
+date: "2026-09-06"
 parents:
   - id: requirements
     version: "1.0"
@@ -32,7 +32,7 @@ entities:
     code: [CoreKit/Sources/CoreKit/VolumeCapabilities.swift]
   - name: unsupported-volume
     type: concept
-    definition: "HFS+·exFAT처럼 커널 드라이버가 이름을 강제로 NFD로 되돌려, NFC로 직접 만들어도 NFD로 저장되므로 어떤 전략으로도 변환할 수 없는 볼륨. '지원하지 않습니다'로 표시하고 건드리지 않는다"
+    definition: "HFS+·exFAT처럼 커널 드라이버가 이름을 강제로 NFD로 되돌려, NFC로 직접 만들어도 NFD로 저장되므로 어떤 전략으로도 변환할 수 없는 볼륨. '이 디스크(exFAT)는 변환을 지원하지 않습니다'로 표시하고 건드리지 않는다"
     code: [CoreKit/Sources/CoreKit/VolumeCapabilities.swift]
   - name: banned-foundation-api
     type: constraint
@@ -201,7 +201,7 @@ HFS+·exFAT에서는 몇 번을 시도해도 NFC로 바뀌지 않는다. 무한 
 3. 즉시 지운다
 4. 결과를 `st_dev` 기준으로 캐시한다
 
-NFC가 보존되지 않는 볼륨은 "이 디스크는 변환을 지원하지 않습니다"로 표시하고
+NFC가 보존되지 않는 볼륨은 "이 디스크(exFAT)는 변환을 지원하지 않습니다"로 표시하고
 조용히 건너뛴다.
 
 ### 4.3 금지 목록

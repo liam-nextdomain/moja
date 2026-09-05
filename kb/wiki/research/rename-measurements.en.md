@@ -2,8 +2,8 @@
 id: rename-measurements
 title: "Measuring what `rename(2)` stores"
 type: measurement
-version: "1.0"
-date: "2026-09-05"
+version: "1.1"
+date: "2026-09-06"
 lang: en
 parents:
   - id: requirements
@@ -33,7 +33,7 @@ entities:
     code: [CoreKit/Sources/CoreKit/VolumeCapabilities.swift]
   - name: unsupported-volume
     type: concept
-    definition: "a volume such as HFS+ or exFAT whose kernel driver forces names back to NFD, so that even creating an NFC name directly stores NFD and no strategy can convert it. shown as 'not supported' and left alone"
+    definition: "a volume such as HFS+ or exFAT whose kernel driver forces names back to NFD, so that even creating an NFC name directly stores NFD and no strategy can convert it. shown as '이 디스크(exFAT)는 변환을 지원하지 않습니다' and left alone"
     code: [CoreKit/Sources/CoreKit/VolumeCapabilities.swift]
   - name: banned-foundation-api
     type: constraint
@@ -207,8 +207,8 @@ drivers change). Instead, **measure once per volume**:
 3. delete it immediately
 4. cache the result by `st_dev`
 
-A volume that does not preserve NFC is shown as `이 디스크는 변환을 지원하지 않습니다`
-("this disk does not support conversion") and quietly skipped.
+A volume that does not preserve NFC is shown as `이 디스크(exFAT)는 변환을 지원하지 않습니다`
+("this disk (exFAT) does not support conversion") and quietly skipped.
 
 ### 4.3 The banned list
 
