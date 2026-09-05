@@ -220,6 +220,7 @@ docs/images/ README 스크린샷
 
 v1.0.0은 수용 기준 16개를 전부 통과해야 합니다. 현재 12개 자동 통과, 1개 수동 확인.
 
+<!-- roadmap:release-checklist:start -->
 - [ ] **T13** 로그인 시 자동 실행: 실제 재로그인으로 확인합니다.
       ad-hoc 서명에서는 의미가 없으므로 서명을 붙인 뒤에 확인해야 합니다
 - [ ] **T15** 24시간 방치: 메모리 30MB 이하 유지 확인
@@ -227,6 +228,7 @@ v1.0.0은 수용 기준 16개를 전부 통과해야 합니다. 현재 12개 자
 - [x] 설치 안내 스크린샷 3장: macOS 골든게이트 기준입니다. 이전 버전 화면은 표로만 안내합니다
 - [ ] Developer ID 서명 + 공증 (`scripts/release.sh`에 절차는 준비됨)
 - [ ] Homebrew cask 등록
+<!-- roadmap:release-checklist:end -->
 
 ---
 
