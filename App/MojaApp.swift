@@ -13,7 +13,7 @@ struct MojaApp: App {
             MenuContentView()
                 .environmentObject(model)
         } label: {
-            Image(systemName: model.iconSymbolName)
+            Image(nsImage: model.iconImage)
                 .opacity(model.iconOpacity)
                 .accessibilityLabel(model.statusAccessibilityLabel)
                 .task {

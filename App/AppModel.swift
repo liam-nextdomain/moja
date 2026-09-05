@@ -107,9 +107,7 @@ final class AppModel: ObservableObject {
 
     // MARK: - 메뉴바 표시 (FR-7)
 
-    var iconSymbolName: String {
-        hasProblem ? "textformat.abc.dottedunderline" : "textformat.abc"
-    }
+    var iconImage: NSImage { MenuBarIcon.image(hasProblem: hasProblem) }
 
     var iconOpacity: Double { isPaused ? 0.4 : 1.0 }
 
