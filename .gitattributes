@@ -1,0 +1,5 @@
+# 지식 그래프는 생성물이다. 문서를 고칠 때마다 바뀌므로 diff에서 접어 둔다.
+# gitignore 하지 않는 이유: CLAUDE.md가 이 파일을 읽으라고 지시하는데,
+# 갓 클론한 저장소에는 첫 훅이 돌기 전까지 그래프가 없다.
+kb/wiki/graph.json          linguist-generated=true -diff
+kb/wiki/graph_sections.json linguist-generated=true -diff
