@@ -50,7 +50,7 @@
 
 ### 내 macOS에서는 화면이 다릅니다
 
-허용 절차는 macOS 버전마다 조금씩 달라졌습니다. 하는 일은 같습니다 —
+허용 절차는 macOS 버전마다 조금씩 달라졌습니다. 그러나 하는 일은 같습니다.
 **"이 앱을 알고 실행하는 게 맞다"고 시스템에 한 번 확인해 주는 것**입니다.
 
 | macOS | 2번 경고창 | 허용하는 곳 |
@@ -207,9 +207,9 @@ docs/      측정 기록, 수용 기준 결과
 
 ### 문서
 
-- [REQUIREMENTS.md](REQUIREMENTS.md) — v1 요구사항과 구현이 문서와 달라진 지점
-- [docs/rename-measurements.md](docs/rename-measurements.md) — 파일시스템별 실측 결과
-- [docs/acceptance-results.md](docs/acceptance-results.md) — 수용 기준 검증 결과
+- [REQUIREMENTS.md](REQUIREMENTS.md): v1 요구사항과 구현이 문서와 달라진 지점
+- [docs/rename-measurements.md](docs/rename-measurements.md): 파일시스템별 실측 결과
+- [docs/acceptance-results.md](docs/acceptance-results.md): 수용 기준 검증 결과
 
 ---
 
@@ -217,11 +217,11 @@ docs/      측정 기록, 수용 기준 결과
 
 v1.0.0은 수용 기준 16개를 전부 통과해야 합니다. 현재 12개 자동 통과, 1개 수동 확인.
 
-- [ ] **T13** 로그인 시 자동 실행 — 실제 재로그인으로 확인.
+- [ ] **T13** 로그인 시 자동 실행: 실제 재로그인으로 확인합니다.
       ad-hoc 서명에서는 의미가 없으므로 서명을 붙인 뒤에 확인해야 합니다
-- [ ] **T15** 24시간 방치 — 메모리 30MB 이하 유지 확인
-- [ ] **T16** Windows에서 열기 — 위 전송 경로 표 채우기
-- [x] 설치 안내 스크린샷 3장 — macOS 골든게이트 기준. 이전 버전 화면은 표로만 안내
+- [ ] **T15** 24시간 방치: 메모리 30MB 이하 유지 확인
+- [ ] **T16** Windows에서 열기: 위 전송 경로 표 채우기
+- [x] 설치 안내 스크린샷 3장: macOS 골든게이트 기준입니다. 이전 버전 화면은 표로만 안내합니다
 - [ ] Developer ID 서명 + 공증 (`scripts/release.sh`에 절차는 준비됨)
 - [ ] Homebrew cask 등록
 

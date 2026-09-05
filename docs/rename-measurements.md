@@ -31,7 +31,7 @@
 
 ## 2. 항목별 결과
 
-### 2.1 APFS — 전부 통과
+### 2.1 APFS: 전부 통과
 
 ```
 A. 정규화 보존       NFD로 만들면 NFD 그대로 저장  (preserving)
@@ -43,20 +43,20 @@ H. NFC 직접 생성     NFC로 저장됨 ✅
 ```
 
 `renamex_np(RENAME_EXCL)`가 **`EEXIST` 없이 바로 성공**했다. 정규화 무시 볼륨이라
-목적지가 "이미 존재"한다고 볼 법한데 그렇지 않았다 — 커널이 원본과 목적지를 같은
+목적지가 "이미 존재"한다고 볼 법한데 그렇지 않았다. 커널이 원본과 목적지를 같은
 파일로 인식하고 정상 처리한다. 따라서 **`RENAME_EXCL`이 1순위 경로가 될 수 있다.**
 평범한 `rename(2)`보다 안전하면서 성능·동작이 동일하다.
 
 대소문자 구분 APFS도 NFC 저장이 되고, 여전히 정규화는 무시한다.
 
-### 2.2 HFS+ — 변환 불가
+### 2.2 HFS+: 변환 불가
 
 NFC 이름으로 **직접 생성해도** 디스크에는 NFD로 저장된다. 커널의 HFS+ 드라이버가
 이름을 강제로 분해한다. `rename(2)`도, 2단계 임시 이름 폴백도 소용없다.
 
 `renamex_np`는 `EEXIST`를 돌려준다.
 
-### 2.3 exFAT — 변환 불가 (예상과 달랐음)
+### 2.3 exFAT: 변환 불가 (예상과 달랐음)
 
 계획 단계에서 exFAT을 "정규화 구분(normalization-sensitive)" 볼륨으로 보고,
 `rename(2)`가 공존하는 상대 파일을 덮어쓸 수 있다고 판단했다. **틀렸다.**
@@ -65,7 +65,7 @@ NFC 이름으로 **직접 생성해도** 디스크에는 NFD로 저장된다. �
 - NFC 이름으로 직접 생성해도 NFD로 저장된다 (HFS+와 동일하게 커널이 강제 변환)
 - 정규화를 **무시**한다 (NFD로 만든 파일이 NFC 경로로 조회됨)
 - 따라서 NFD·NFC 공존도 불가능하다
-- `renamex_np`는 `ENOTSUP (45)` — 이 드라이버는 지원하지 않는다
+- `renamex_np`는 `ENOTSUP (45)`: 이 드라이버는 지원하지 않는다
 
 즉 macOS의 exFAT 드라이버에서는 애초에 NFC를 저장할 수 없고, 덮어쓰기 사고도
 일어나지 않는다.
@@ -74,7 +74,7 @@ NFC 이름으로 **직접 생성해도** 디스크에는 NFD로 저장된다. �
 macOS가 NFD로 되돌려 저장한다. Moja가 고칠 수 있는 문제가 아니다. README의 한계
 항목에 넣어야 한다.
 
-### 2.4 함정 — 셸이 거짓말을 한다
+### 2.4 함정: 셸이 거짓말을 한다
 
 측정 중 `ls`와 zsh 글로빙이 exFAT 파일명을 NFC로 보여 주는 바람에 한 차례
 잘못된 결론에 도달했다. `readdir(3)`·`getattrlistbulk(2)`·`/bin/ls`의 원시 출력을
@@ -102,13 +102,13 @@ FR-3이 검증 방법으로 `FileManager.contentsOfDirectory`를 지정했기에
 FR-3의 검증 방법이 유효하다. (단 비교는 `==`가 아니라 바이트로 해야 한다.)
 
 **쓰기 방향은 위험하다.** `fileSystemRepresentation`은 경로를 NFD로 분해한다.
-이 경로를 쓰는 모든 API — `FileManager.moveItem(at:to:)`, `createFile(atPath:)`,
-`URL` 기반 파일 조작 — 는 **NFC 이름을 만들 수 없다.** NFC로 바꾸라고 시켜도
+이 경로를 쓰는 모든 API(`FileManager.moveItem(at:to:)`, `createFile(atPath:)`,
+`URL` 기반 파일 조작)는 **NFC 이름을 만들 수 없다.** NFC로 바꾸라고 시켜도
 NFD로 저장된다.
 
 FR-3이 `rename(2)` 직접 호출을 지시한 진짜 이유가 이것이다. 문서는 "`moveItem`이
 목적지가 이미 존재한다고 판단해 실패할 수 있다"고만 적었지만, 실제 문제는 더
-근본적이다 — **`moveItem`은 성공해도 NFD를 쓴다.**
+근본적이다. **`moveItem`은 성공해도 NFD를 쓴다.**
 
 ---
 
@@ -128,7 +128,7 @@ FR-3이 `rename(2)` 직접 호출을 지시한 진짜 이유가 이것이다. �
 ```
 
 측정 결과 로컬 볼륨에서는 `EEXIST` 후 "다른 파일" 분기가 발생하지 않는다.
-그래도 남겨 둔다 — SMB/NFS를 측정하지 못했고, 비용은 `lstat` 한 번뿐이며,
+그래도 남겨 둔다. SMB/NFS를 측정하지 못했고, 비용은 `lstat` 한 번뿐이며,
 틀렸을 때 잃는 것이 사용자 파일이기 때문이다.
 
 **exFAT의 `ENOTSUP`은 폴백 경로에서도 처리해야 한다.** 커밋 3 구현 중 실제로 걸렸다.
@@ -156,10 +156,10 @@ NFC가 보존되지 않는 볼륨은 "이 디스크는 변환을 지원하지 �
 
 `Renamer`·`Watcher`·`Planner`에서 다음을 쓰지 않는다.
 
-- `FileManager.moveItem` / `createFile(atPath:)` — NFD를 쓴다
+- `FileManager.moveItem` / `createFile(atPath:)`: NFD를 쓴다
 - `NSString.fileSystemRepresentation` / `URL.withUnsafeFileSystemRepresentation`
-- `String ==` 로 이름 비교 — 정규화를 무시한다
-- 셸(`ls`·글로빙)로 결과 검증 — zsh가 정규화한다
+- `String ==` 로 이름 비교: 정규화를 무시한다
+- 셸(`ls`·글로빙)로 결과 검증: zsh가 정규화한다
 
 경로는 `String.withCString` 또는 `Array(name.utf8)`로 직접 만든다.
 
