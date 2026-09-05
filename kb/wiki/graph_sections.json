@@ -6,18 +6,18 @@
   "stats": {
     "sections": 57,
     "symbols": 28,
-    "edges": 325
+    "edges": 326
   },
   "sections": [
     {
       "id": "acceptance-results#1",
       "doc": "acceptance-results",
-      "path": "spec/acceptance-results.md",
+      "path": "spec/acceptance-results.en.md",
       "level": 2,
       "num": "1",
-      "heading": "결과",
-      "line_start": 45,
-      "line_end": 74,
+      "heading": "Results",
+      "line_start": 49,
+      "line_end": 78,
       "symbols_declared": [
         "T1",
         "T2",
@@ -41,24 +41,24 @@
     {
       "id": "acceptance-results#2",
       "doc": "acceptance-results",
-      "path": "spec/acceptance-results.md",
+      "path": "spec/acceptance-results.en.md",
       "level": 2,
       "num": "2",
-      "heading": "아직 검증하지 못한 것",
-      "line_start": 75,
-      "line_end": 78,
+      "heading": "Not yet verified",
+      "line_start": 79,
+      "line_end": 82,
       "symbols_declared": [],
       "symbols_mentioned": []
     },
     {
       "id": "acceptance-results#T13",
       "doc": "acceptance-results",
-      "path": "spec/acceptance-results.md",
+      "path": "spec/acceptance-results.en.md",
       "level": 3,
       "num": "T13",
-      "heading": "로그인 시 자동 실행",
-      "line_start": 79,
-      "line_end": 88,
+      "heading": "launch at login",
+      "line_start": 83,
+      "line_end": 92,
       "symbols_declared": [
         "T13"
       ],
@@ -67,12 +67,12 @@
     {
       "id": "acceptance-results#T15",
       "doc": "acceptance-results",
-      "path": "spec/acceptance-results.md",
+      "path": "spec/acceptance-results.en.md",
       "level": 3,
       "num": "T15",
-      "heading": "24시간 방치 (메모리 30MB 이하)",
-      "line_start": 89,
-      "line_end": 98,
+      "heading": "24 hours idle (memory under 30MB)",
+      "line_start": 93,
+      "line_end": 102,
       "symbols_declared": [
         "T15"
       ],
@@ -81,12 +81,12 @@
     {
       "id": "acceptance-results#T16",
       "doc": "acceptance-results",
-      "path": "spec/acceptance-results.md",
+      "path": "spec/acceptance-results.en.md",
       "level": 3,
       "num": "T16",
-      "heading": "Windows에서 열기",
-      "line_start": 99,
-      "line_end": 110,
+      "heading": "opening on Windows",
+      "line_start": 103,
+      "line_end": 115,
       "symbols_declared": [
         "T16"
       ],
@@ -95,12 +95,12 @@
     {
       "id": "acceptance-results#3",
       "doc": "acceptance-results",
-      "path": "spec/acceptance-results.md",
+      "path": "spec/acceptance-results.en.md",
       "level": 2,
       "num": "3",
-      "heading": "검증 중 고친 것",
-      "line_start": 111,
-      "line_end": 123,
+      "heading": "Fixed during verification",
+      "line_start": 116,
+      "line_end": 127,
       "symbols_declared": [],
       "symbols_mentioned": [
         "T11"
@@ -109,12 +109,12 @@
     {
       "id": "acceptance-results#4",
       "doc": "acceptance-results",
-      "path": "spec/acceptance-results.md",
+      "path": "spec/acceptance-results.en.md",
       "level": 2,
       "num": "4",
-      "heading": "검증 방법에 대한 기록",
-      "line_start": 124,
-      "line_end": 133,
+      "heading": "Notes on method",
+      "line_start": 128,
+      "line_end": 136,
       "symbols_declared": [],
       "symbols_mentioned": [
         "T10"
@@ -1914,6 +1914,11 @@
       "from": "acceptance-results#T16",
       "to": "T16",
       "relation": "declares"
+    },
+    {
+      "from": "acceptance-results#T16",
+      "to": "requirements#7.1",
+      "relation": "references"
     },
     {
       "from": "acceptance-results",

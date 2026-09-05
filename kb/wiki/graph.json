@@ -14,10 +14,10 @@
       "id": "acceptance-results",
       "type": "document",
       "doc_type": "verification",
-      "title": "수용 기준 결과",
+      "title": "Acceptance criteria results",
       "version": "1.0",
       "date": "2026-09-05",
-      "path": "spec/acceptance-results.md",
+      "path": "spec/acceptance-results.en.md",
       "tags": [
         "verification",
         "acceptance",
@@ -65,19 +65,19 @@
       "id": "acceptance-runner",
       "type": "entity",
       "entity_type": "script",
-      "definition": "진짜 앱을 띄워 진짜 파일로 T1~T11과 T14를 확인하는 자동 검증기. 사용자의 설정과 로그를 건드리지 않도록 앱이 MOJA_DEFAULTS_SUITE·MOJA_LOG_DIR 환경변수를 받고, 모든 파일 이름을 바이트 단위로 다룬다"
+      "definition": "automated verifier that launches the real app and checks T1-T11 and T14 with real files. the app takes MOJA_DEFAULTS_SUITE and MOJA_LOG_DIR so the user's settings and logs are never touched, and every file name is handled byte by byte"
     },
     {
       "id": "unverified-scenario",
       "type": "entity",
       "entity_type": "concept",
-      "definition": "이 환경에서 확인할 방법이 없어 남은 T13(재로그인), T15(24시간 방치), T16(Windows에서 열기). v1.0.0의 마지막 차단 요인이다"
+      "definition": "T13 (re-login), T15 (24 hours idle) and T16 (opening on Windows), left because this environment offers no way to check them. the last thing blocking v1.0.0"
     },
     {
       "id": "reconnect-recovery",
       "type": "entity",
       "entity_type": "mechanism",
-      "definition": "'연결 안 됨'이 된 폴더의 감시자를 놓아 주고 볼륨 마운트 알림을 듣되, 알림이 오지 않는 네트워크 공유를 위해 끊긴 폴더가 하나라도 있는 동안에만 보조 확인을 도는 복구 방식"
+      "definition": "recovery that releases the watcher of a folder that went 'not connected' and listens for volume mount notifications, running a secondary sweep only while at least one folder is disconnected, for network shares that send no notification"
     },
     {
       "id": "renamex_np",
@@ -432,7 +432,7 @@
         "7",
         "12.4a"
       ],
-      "note": "7장의 T1~T16을 실제 앱으로 검증한 결과"
+      "note": "the result of verifying T1-T16 of §7 against the real app"
     },
     {
       "from": "acceptance-results",
@@ -443,7 +443,7 @@
         "2.3",
         "2.4"
       ],
-      "note": "T16의 exFAT 제약과 셸 글로빙 함정의 근거"
+      "note": "the basis for T16's exFAT constraint and the shell globbing trap"
     },
     {
       "from": "rename-measurements",
