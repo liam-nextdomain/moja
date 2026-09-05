@@ -1,3 +1,99 @@
+---
+id: requirements
+title: "macOS 한글 파일명 자동 NFC 변환 메뉴바 앱: v1 요구사항"
+type: requirements
+version: "1.0"
+date: "2026-09-05"
+parents: []
+entities:
+  - name: NFD
+    type: standard
+    definition: "유니코드 정규화 형식 D(자소 분리형). macOS 파인더가 한글 파일 이름을 저장하는 형태이고, Windows에서 `ㅂㅗㄱㅗㅅㅓ.docx`로 깨져 보이는 원인이다"
+  - name: NFC
+    type: standard
+    definition: "유니코드 정규화 형식 C(조합형). Windows·리눅스·대부분의 웹이 쓰는 형태이고 Moja가 디스크에 남기려는 목표 형태다"
+  - name: byte-comparison
+    type: constraint
+    definition: "이름 비교를 String ==가 아니라 Array(name.utf8)로 하는 규칙. Swift의 ==는 정규화를 무시해 NFD와 NFC를 같다고 답하므로, ==로 판단하면 이 앱은 아무것도 하지 않는다"
+    code:
+      - CoreKit/Sources/CoreKit/Normalizer.swift
+      - CoreKit/Tests/CoreKitTests/UnicodeAssumptionTests.swift
+  - name: normalizer
+    type: component
+    definition: "이름 한 성분을 NFC로 바꾸고 변환이 필요한지 판정하는 순수 함수. 정준(NFC) 매핑만 쓰고 호환(NFKC) 매핑은 쓰지 않는다. NFKC는 전각 문자와 호환 자모를 다른 글자로 바꿔 사용자의 이름을 훼손한다"
+    code: [CoreKit/Sources/CoreKit/Normalizer.swift]
+  - name: planner
+    type: component
+    definition: "건너뛰기 규칙, 깊이 우선 정렬, 한 배치 상한을 파일시스템에 접근하지 않고 결정하는 순수 로직"
+    code: [CoreKit/Sources/CoreKit/Planner.swift]
+  - name: renamer
+    type: component
+    definition: "이름 하나를 NFC로 바꾸고 부모 디렉터리를 다시 열거해 저장된 원시 바이트가 NFC인지 검증하는 계층"
+    code: [CoreKit/Sources/CoreKit/Renamer.swift]
+  - name: folder-watcher
+    type: component
+    definition: "FSEvents 스트림, 1.5초 디바운스, 3초 무시 목록, 미뤄진 항목 재확인을 묶어 폴더 하나를 감시하는 계층"
+    code:
+      - CoreKit/Sources/CoreKit/FolderWatcher.swift
+      - CoreKit/Sources/CoreKit/FSEventsStream.swift
+      - CoreKit/Sources/CoreKit/WatchPolicy.swift
+  - name: batch-converter
+    type: component
+    definition: "감시 폴더의 기존 항목을 미리보기로 먼저 보여 준 뒤 한 번에 변환하는 경로. 취소하면 아무것도 바뀌지 않는다"
+    code:
+      - CoreKit/Sources/CoreKit/BatchConverter.swift
+      - App/BatchSession.swift
+  - name: scanner
+    type: component
+    definition: "감시 폴더를 재귀로 훑어 변환 대상을 모으는 계층. 심볼릭 링크가 풀린 경로 때문에 같은 폴더를 두 번 훑지 않도록 file-identity로 거른다"
+    code: [CoreKit/Sources/CoreKit/Scanner.swift]
+  - name: overflow-guard
+    type: constraint
+    definition: "한 이벤트 배치의 변환 대상이 500개를 넘으면 하나도 처리하지 않고 '항목이 많습니다, 일괄 변환을 쓰세요' 상태로 넘기는 폭주 방지 규칙. 클라우드 폴더의 첫 동기화가 표적이다"
+    code: [CoreKit/Sources/CoreKit/Planner.swift]
+  - name: stability-window
+    type: constraint
+    definition: "최종 수정 후 2초가 지나지 않은 항목은 아직 쓰는 중일 수 있어 미룬다. 이 규칙과 T1의 '2초 안에'는 산술적으로 양립할 수 없어 T1 기준을 4초로 완화했다"
+    code: [CoreKit/Sources/CoreKit/Planner.swift]
+  - name: deferred-recheck
+    type: mechanism
+    definition: "안정화 대기에 걸려 미뤄진 항목을 다시 보러 오는 장치. 저장이 이미 끝났으면 새 이벤트가 오지 않으므로, 이것이 없으면 그 파일은 영영 변환되지 않는다"
+    code: [CoreKit/Sources/CoreKit/FolderWatcher.swift]
+  - name: ignore-list
+    type: mechanism
+    definition: "앱이 직접 바꾼 경로를 3초간 무시하는 2차 루프 방어선. 1차 방어선은 '이미 NFC면 아무것도 하지 않는다'는 규칙이고, 이 목록은 불필요한 열거와 로그를 줄일 뿐이다"
+    code: [CoreKit/Sources/CoreKit/WatchPolicy.swift]
+  - name: skip-rule
+    type: concept
+    definition: "숨김 항목, 다운로드 임시 확장자, Office ~$ 파일, 번들 내부, 방금 수정된 항목을 건드리지 않는 규칙. '확신이 없으면 바꾸지 않는다'의 구현체다"
+    code: [CoreKit/Sources/CoreKit/Planner.swift]
+  - name: package-boundary
+    type: constraint
+    definition: "앱 꾸러미 안쪽은 건드리지 않고 꾸러미 자체의 이름만 바꾸는 경계. 판별에는 NSWorkspace가 아니라 URLResourceValues.isPackage를 쓴다. CoreKit이 AppKit에 의존하면 앱 없이 테스트할 수 없기 때문이다"
+    code:
+      - CoreKit/Sources/CoreKit/Planner.swift
+      - CoreKit/Sources/CoreKit/Scanner.swift
+  - name: login-item
+    type: api
+    definition: "SMAppService로 등록하는 로그인 항목. 등록이 앱의 코드 서명에 묶이므로 매번 달라지는 ad-hoc 서명 개발 빌드로는 T13을 의미 있게 검증할 수 없다"
+    code: [App/LoginItem.swift]
+  - name: log-store
+    type: component
+    definition: "~/Library/Logs/Moja/Moja.log에만 남기는 기록. 1MB가 넘으면 회전하고 직전 것 하나만 보관한다"
+    code: [CoreKit/Sources/CoreKit/LogStore.swift]
+  - name: acceptance-scenario
+    type: concept
+    definition: "v1 릴리스 조건인 16개 시나리오 T1~T16. 전부 통과해야 v1.0.0이다"
+  - name: transfer-path
+    type: concept
+    definition: "변환된 NFC 파일이 메일·메신저·클라우드·USB·zip을 거쳐 Windows에 도착했을 때 이름이 유지되는지 기록하는 표. 앱 기능이 아니라 한계 고지용이고 README에 그대로 들어간다"
+  - name: xcodegen
+    type: script
+    definition: "project.yml에서 Moja.xcodeproj를 만드는 도구. .xcodeproj는 생성물이라 손으로 고치지 않는다"
+    code: [project.yml]
+tags: [requirements, v1, functional-spec, acceptance-criteria, menu-bar-app, korean-filename]
+---
+
 # macOS 한글 파일명 자동 NFC 변환 메뉴바 앱: v1 요구사항
 
 > 이 문서는 Claude Code에 그대로 전달하는 용도로 작성되었다.

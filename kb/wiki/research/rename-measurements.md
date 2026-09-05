@@ -1,3 +1,55 @@
+---
+id: rename-measurements
+title: "`rename(2)` 저장 정규화 실측"
+type: measurement
+version: "1.0"
+date: "2026-09-05"
+parents:
+  - id: requirements
+    version: "1.0"
+    sections: ["FR-3", "6", "11"]
+    note: "FR-3의 전제인 'rename(2)가 저장된 바이트를 바꾸는가'를 실측으로 확인한 문서"
+entities:
+  - name: renamex_np
+    type: api
+    definition: "RENAME_EXCL 플래그를 붙이는 POSIX rename 확장. APFS에서는 정규화 무시 볼륨인데도 EEXIST 없이 성공하며 저장 바이트를 NFC로 바꾼다. exFAT은 ENOTSUP(45), HFS+는 EEXIST(17)를 돌려준다"
+    code:
+      - CoreKit/Sources/CoreKit/POSIXFile.swift
+      - CoreKit/Sources/CoreKit/Renamer.swift
+  - name: guarded-move
+    type: mechanism
+    definition: "EEXIST·ENOTSUP 처리와 inode 비교를 한 함수로 묶어 첫 시도와 2단계 폴백 양쪽에서 쓰는 이름 변경 관문. 폴백이 renamex_np만 쓰면 exFAT에서 임시 이름 단계부터 ENOTSUP으로 죽어 '지원 안 함'이 아니라 일반 실패로 보고되고 영원히 재시도한다"
+    code: [CoreKit/Sources/CoreKit/Renamer.swift]
+  - name: file-identity
+    type: mechanism
+    definition: "(st_dev, st_ino) 쌍. 목적지가 같은 파일인지 진짜 충돌인지 가르는 기준이고, 심볼릭 링크가 풀린 경로와 원래 경로로 같은 폴더가 두 번 들어오는 것을 거르는 기준이기도 하다"
+    code:
+      - CoreKit/Sources/CoreKit/POSIXFile.swift
+      - CoreKit/Sources/CoreKit/Scanner.swift
+  - name: volume-capability-probe
+    type: mechanism
+    definition: "볼륨당 한 번, 대상 폴더에 NFC 이름의 숨김 임시 파일을 만들어 저장 형태를 확인하고 즉시 지운 뒤 st_dev 기준으로 캐시하는 실측. f_fstypename 문자열 판별은 SMB가 서버 구현에 좌우되고 드라이버도 바뀔 수 있어 쓰지 않는다"
+    code: [CoreKit/Sources/CoreKit/VolumeCapabilities.swift]
+  - name: unsupported-volume
+    type: concept
+    definition: "HFS+·exFAT처럼 커널 드라이버가 이름을 강제로 NFD로 되돌려, NFC로 직접 만들어도 NFD로 저장되므로 어떤 전략으로도 변환할 수 없는 볼륨. '지원하지 않습니다'로 표시하고 건드리지 않는다"
+    code: [CoreKit/Sources/CoreKit/VolumeCapabilities.swift]
+  - name: banned-foundation-api
+    type: constraint
+    definition: "FileManager.moveItem, createFile(atPath:), NSString.fileSystemRepresentation, URL.withUnsafeFileSystemRepresentation. 경로를 NFD로 분해하므로 실패하는 것이 아니라 성공하면서 NFD를 쓴다. 읽기(디렉터리 열거)는 안전하다"
+    code:
+      - CoreKit/Sources/CoreKit/CoreKit.swift
+      - CoreKit/Sources/CoreKit/DirectoryReader.swift
+  - name: zsh-globbing-trap
+    type: concept
+    definition: "zsh가 글로빙 결과를 NFC로 정규화해 `cp staging/* watched/` 같은 명령이 NFD 이름을 NFC로 바꿔서 복사하는 함정. 파일 이름 검증을 셸로 준비하면 안 되는 이유다"
+  - name: probe-volume
+    type: script
+    definition: "새 볼륨을 마운트한 뒤 경로만 넘기면 1절의 표를 다시 만드는 측정 스크립트. Foundation의 경로 변환을 일절 거치지 않는다"
+    code: [scripts/probe-volume.swift]
+tags: [measurement, filesystem, apfs, hfs-plus, exfat, posix, unicode-normalization, foundation-limits]
+---
+
 # `rename(2)` 저장 정규화 실측
 
 요구사항 11장 4번 "`rename(2)`가 실제로 저장 형식을 바꾸는지 **반드시 실측**"에 대한 답.

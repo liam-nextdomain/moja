@@ -1,3 +1,35 @@
+---
+id: acceptance-results
+title: "수용 기준 결과"
+type: verification
+version: "1.0"
+date: "2026-09-05"
+parents:
+  - id: requirements
+    version: "1.0"
+    sections: ["7", "12.4a"]
+    note: "7장의 T1~T16을 실제 앱으로 검증한 결과"
+  - id: rename-measurements
+    version: "1.0"
+    sections: ["2.3", "2.4"]
+    note: "T16의 exFAT 제약과 셸 글로빙 함정의 근거"
+entities:
+  - name: acceptance-runner
+    type: script
+    definition: "진짜 앱을 띄워 진짜 파일로 T1~T11과 T14를 확인하는 자동 검증기. 사용자의 설정과 로그를 건드리지 않도록 앱이 MOJA_DEFAULTS_SUITE·MOJA_LOG_DIR 환경변수를 받고, 모든 파일 이름을 바이트 단위로 다룬다"
+    code: [scripts/acceptance.swift]
+  - name: unverified-scenario
+    type: concept
+    definition: "이 환경에서 확인할 방법이 없어 남은 T13(재로그인), T15(24시간 방치), T16(Windows에서 열기). v1.0.0의 마지막 차단 요인이다"
+  - name: reconnect-recovery
+    type: mechanism
+    definition: "'연결 안 됨'이 된 폴더의 감시자를 놓아 주고 볼륨 마운트 알림을 듣되, 알림이 오지 않는 네트워크 공유를 위해 끊긴 폴더가 하나라도 있는 동안에만 보조 확인을 도는 복구 방식"
+    code:
+      - App/AppModel.swift
+      - CoreKit/Sources/CoreKit/FolderWatcher.swift
+tags: [verification, acceptance, release-gate, unverified]
+---
+
 # 수용 기준 결과
 
 요구사항 7장 T1~T16의 검증 결과.
