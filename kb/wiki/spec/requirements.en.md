@@ -2,8 +2,8 @@
 id: requirements
 title: "macOS menu bar app that converts Korean file names to NFC: v1 requirements"
 type: requirements
-version: "1.3"
-date: "2026-09-06"
+version: "1.6"
+date: "2026-09-09"
 lang: en
 parents: []
 entities:
@@ -377,16 +377,45 @@ through each path below. This table goes into README verbatim.
 
 | Path | Result | Notes |
 |---|---|---|
-| macOS Mail attachment (`macOS 기본 메일 앱 첨부`) | | |
-| Gmail web attachment, Safari or Chrome (`Gmail 웹 첨부`) | | |
-| KakaoTalk for Mac (`카카오톡 맥`) | | |
-| Slack for Mac (`슬랙 맥`) | | |
-| Google Drive desktop sync (`구글 드라이브 데스크탑 동기화`) | | |
-| OneDrive sync (`원드라이브 동기화`) | | |
-| iCloud Drive to iCloud for Windows (`아이클라우드 드라이브 → 윈도우 iCloud`) | | |
-| USB flash drive, exFAT (`USB 메모리 (exFAT)`) | | |
-| Finder's built-in zip (`파인더 기본 압축(zip)`) | | |
-| AirDrop to iPhone to Windows (`AirDrop → 아이폰 → 윈도우`) | | |
+| KakaoTalk file sharing (`카카오톡 파일 공유`) | `유지됨` (survived) | verified 2026-09-09 |
+| Slack file sharing (`슬랙 파일 공유`) | `유지됨` (survived) | verified 2026-09-09 |
+| Google Drive upload (`구글 드라이브 업로드`) | `깨짐` (broken) | verified 2026-09-09 |
+| OneDrive sync (`원드라이브 동기화`) | `미검증` (unverified) | |
+| iCloud Drive to iCloud for Windows (`아이클라우드 드라이브 → 윈도우 iCloud`) | `깨짐` (broken) | verified 2026-09-09 |
+| USB flash drive, exFAT (`USB 메모리 (exFAT)`) | `깨짐` (broken) | the app cannot fix this. see rename-measurements §2.3 |
+| Finder's built-in zip (`파인더 기본 압축(zip)`) | `미검증` (unverified) | zip's missing UTF-8 flag is a known problem, but nobody has opened one on Windows to check (T16) |
+| AirDrop to iPhone to Windows (`AirDrop → 아이폰 → 윈도우`) | `미검증` (unverified) | |
+
+Results take one of three values. `유지됨` (survived) means the composed name the app produced
+arrived intact on the receiving side, `깨짐` (broken) means something along the transfer path
+decomposed it again, and `미검증` (unverified) means nobody has checked yet. Wording like
+"변환됨" (converted) is never used, because it reads equally well as the app having fixed the name
+and as the transfer path having damaged it.
+
+A mail attachment cannot be recorded as one row in the table above. The party that encodes the
+attachment's file name into the MIME header is the sending client, while the party that stores that
+name and hands it back out on download is the receiving mail service, so the result varies with
+each combination of the two providers. KakaoTalk and Slack do not have this problem because sender
+and receiver are on the same provider; it applies only to mail, which crosses providers. Verify and
+record each combination separately, and never conclude that one combination being correct makes
+another one correct.
+
+| Sender | Receiver | Result | Notes |
+|---|---|---|---|
+| Naver Mail, web (`네이버 메일 (웹)`) | Naver Mail (`네이버 메일`) | `유지됨` (survived) | verified 2026-09-09 |
+| Naver Mail, web (`네이버 메일 (웹)`) | Gmail (`지메일`) | `깨짐` (broken) | verified 2026-09-09 |
+| Gmail, web (`지메일 (웹)`) | Gmail (`지메일`) | `깨짐` (broken) | verified 2026-09-09 |
+| Gmail, web (`지메일 (웹)`) | Naver Mail (`네이버 메일`) | `유지됨` (survived) | verified 2026-09-09 |
+| macOS Mail app (`macOS 기본 메일 앱`) | Naver Mail (`네이버 메일`) | `유지됨` (survived) | verified 2026-09-09 |
+| macOS Mail app (`macOS 기본 메일 앱`) | Gmail (`지메일`) | `유지됨` (survived) | verified 2026-09-09 |
+
+This verification did not record whether the receiving side was opened in a web browser or received
+in a mail app. The paragraph below calls for that axis, so fill it into the notes when these
+combinations are verified again.
+
+The result may also diverge depending on whether the receiving side downloads through a web browser
+or receives in a mail app such as Outlook. Splitting that axis into its own columns would inflate
+the table too far, so record which one it was in the Notes column at verification time.
 
 ---
 

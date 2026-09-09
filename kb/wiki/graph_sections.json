@@ -6,7 +6,7 @@
   "stats": {
     "sections": 57,
     "symbols": 28,
-    "edges": 322
+    "edges": 324
   },
   "sections": [
     {
@@ -577,9 +577,11 @@
       "num": "7.1",
       "heading": "Transfer path verification (for the README, not an app feature)",
       "line_start": 373,
-      "line_end": 392,
+      "line_end": 421,
       "symbols_declared": [],
-      "symbols_mentioned": []
+      "symbols_mentioned": [
+        "T16"
+      ]
     },
     {
       "id": "requirements#8",
@@ -588,8 +590,8 @@
       "level": 2,
       "num": "8",
       "heading": "Distribution",
-      "line_start": 393,
-      "line_end": 408,
+      "line_start": 422,
+      "line_end": 437,
       "symbols_declared": [],
       "symbols_mentioned": []
     },
@@ -600,8 +602,8 @@
       "level": 2,
       "num": "9",
       "heading": "README requirements",
-      "line_start": 409,
-      "line_end": 423,
+      "line_start": 438,
+      "line_end": 452,
       "symbols_declared": [],
       "symbols_mentioned": []
     },
@@ -612,8 +614,8 @@
       "level": 2,
       "num": "10",
       "heading": "Open questions (Claude Code must not settle these alone; ask in the first report)",
-      "line_start": 424,
-      "line_end": 432,
+      "line_start": 453,
+      "line_end": 461,
       "symbols_declared": [],
       "symbols_mentioned": [
         "FR-14"
@@ -626,8 +628,8 @@
       "level": 3,
       "num": "10.1",
       "heading": "Decisions (2026-09-04)",
-      "line_start": 433,
-      "line_end": 442,
+      "line_start": 462,
+      "line_end": 471,
       "symbols_declared": [],
       "symbols_mentioned": [
         "FR-5"
@@ -640,8 +642,8 @@
       "level": 2,
       "num": "11",
       "heading": "Work instructions (execution order for Claude Code)",
-      "line_start": 443,
-      "line_end": 470,
+      "line_start": 472,
+      "line_end": 499,
       "symbols_declared": [],
       "symbols_mentioned": [
         "FR-3",
@@ -669,8 +671,8 @@
       "level": 2,
       "num": "12",
       "heading": "Where the implementation diverged (updated during development)",
-      "line_start": 471,
-      "line_end": 475,
+      "line_start": 500,
+      "line_end": 504,
       "symbols_declared": [],
       "symbols_mentioned": []
     },
@@ -681,8 +683,8 @@
       "level": 3,
       "num": "12.1",
       "heading": "FR-3: `renamex_np(RENAME_EXCL)` becomes the first choice",
-      "line_start": 476,
-      "line_end": 507,
+      "line_start": 505,
+      "line_end": 536,
       "symbols_declared": [],
       "symbols_mentioned": [
         "FR-3"
@@ -695,8 +697,8 @@
       "level": 3,
       "num": "12.1a",
       "heading": "FR-3 verification: Foundation is fine for reading",
-      "line_start": 508,
-      "line_end": 519,
+      "line_start": 537,
+      "line_end": 548,
       "symbols_declared": [],
       "symbols_mentioned": [
         "FR-3"
@@ -709,8 +711,8 @@
       "level": 3,
       "num": "12.1b",
       "heading": "Volume capability probe (new)",
-      "line_start": 520,
-      "line_end": 530,
+      "line_start": 549,
+      "line_end": 559,
       "symbols_declared": [],
       "symbols_mentioned": []
     },
@@ -721,8 +723,8 @@
       "level": 3,
       "num": "12.2",
       "heading": "FR-2: `NSWorkspace` is not used for package detection",
-      "line_start": 531,
-      "line_end": 535,
+      "line_start": 560,
+      "line_end": 564,
       "symbols_declared": [],
       "symbols_mentioned": [
         "FR-2"
@@ -735,8 +737,8 @@
       "level": 3,
       "num": "12.3",
       "heading": "§6 module structure: `Core/*` split into a local SwiftPM package, `CoreKit`",
-      "line_start": 536,
-      "line_end": 543,
+      "line_start": 565,
+      "line_end": 572,
       "symbols_declared": [],
       "symbols_mentioned": []
     },
@@ -747,8 +749,8 @@
       "level": 3,
       "num": "12.4",
       "heading": "§5 language: Swift 5 language mode, not Swift 6",
-      "line_start": 544,
-      "line_end": 551,
+      "line_start": 573,
+      "line_end": 580,
       "symbols_declared": [],
       "symbols_mentioned": []
     },
@@ -759,8 +761,8 @@
       "level": 3,
       "num": "12.4a",
       "heading": "T1's \"within 2 seconds\" is incompatible with FR-2 ⚠️ decision needed",
-      "line_start": 552,
-      "line_end": 585,
+      "line_start": 581,
+      "line_end": 614,
       "symbols_declared": [],
       "symbols_mentioned": [
         "T1",
@@ -774,8 +776,8 @@
       "level": 3,
       "num": "12.4b",
       "heading": "Rechecking deferred items (new)",
-      "line_start": 586,
-      "line_end": 595,
+      "line_start": 615,
+      "line_end": 624,
       "symbols_declared": [],
       "symbols_mentioned": [
         "FR-2"
@@ -788,8 +790,8 @@
       "level": 3,
       "num": "12.4c",
       "heading": "Duplicate folder scanning (found during implementation)",
-      "line_start": 596,
-      "line_end": 602,
+      "line_start": 625,
+      "line_end": 631,
       "symbols_declared": [],
       "symbols_mentioned": []
     },
@@ -800,8 +802,8 @@
       "level": 3,
       "num": "12.5",
       "heading": "Volumes where conversion is impossible (measured)",
-      "line_start": 603,
-      "line_end": 614,
+      "line_start": 632,
+      "line_end": 643,
       "symbols_declared": [],
       "symbols_mentioned": []
     }
@@ -1784,7 +1786,8 @@
       "proposed": false,
       "declared_in": "requirements#7",
       "mentioned_in": [
-        "rename-measurements#2.3"
+        "rename-measurements#2.3",
+        "requirements#7.1"
       ],
       "cited_by": []
     }
@@ -2299,6 +2302,16 @@
       "from": "requirements",
       "to": "requirements#7.1",
       "relation": "contains"
+    },
+    {
+      "from": "requirements#7.1",
+      "to": "T16",
+      "relation": "mentions"
+    },
+    {
+      "from": "requirements#7.1",
+      "to": "rename-measurements#2.3",
+      "relation": "references"
     },
     {
       "from": "requirements",
