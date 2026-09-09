@@ -49,8 +49,8 @@
       "type": "document",
       "doc_type": "requirements",
       "title": "macOS menu bar app that converts Korean file names to NFC: v1 requirements",
-      "version": "1.6",
-      "date": "2026-09-09",
+      "version": "1.8",
+      "date": "2026-09-10",
       "path": "spec/requirements.en.md",
       "tags": [
         "requirements",

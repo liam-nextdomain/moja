@@ -5,8 +5,8 @@
   },
   "stats": {
     "sections": 57,
-    "symbols": 28,
-    "edges": 324
+    "symbols": 27,
+    "edges": 325
   },
   "sections": [
     {
@@ -617,9 +617,7 @@
       "line_start": 453,
       "line_end": 461,
       "symbols_declared": [],
-      "symbols_mentioned": [
-        "FR-14"
-      ]
+      "symbols_mentioned": []
     },
     {
       "id": "requirements#10.1",
@@ -760,7 +758,7 @@
       "path": "spec/requirements.en.md",
       "level": 3,
       "num": "12.4a",
-      "heading": "T1's \"within 2 seconds\" is incompatible with FR-2 ⚠️ decision needed",
+      "heading": "T1's \"within 2 seconds\" is incompatible with FR-2",
       "line_start": 581,
       "line_end": 614,
       "symbols_declared": [],
@@ -822,11 +820,11 @@
         },
         {
           "path": "App/AppModel.swift",
-          "line": 127
+          "line": 170
         },
         {
           "path": "App/AppModel.swift",
-          "line": 254
+          "line": 299
         },
         {
           "path": "CoreKit/Sources/CoreKit/DirectoryReader.swift",
@@ -1084,7 +1082,7 @@
       "cited_by": [
         {
           "path": "App/AppModel.swift",
-          "line": 334
+          "line": 379
         },
         {
           "path": "App/BatchSession.swift",
@@ -1145,11 +1143,15 @@
       "cited_by": [
         {
           "path": "App/AppModel.swift",
-          "line": 108
+          "line": 54
         },
         {
           "path": "App/AppModel.swift",
-          "line": 152
+          "line": 114
+        },
+        {
+          "path": "App/AppModel.swift",
+          "line": 195
         },
         {
           "path": "App/MenuBarIcon.swift",
@@ -1166,6 +1168,10 @@
         {
           "path": "App/Views/MenuContentView.swift",
           "line": 4
+        },
+        {
+          "path": "scripts/make-menubar-icon.swift",
+          "line": 5
         }
       ]
     },
@@ -1178,7 +1184,7 @@
       "cited_by": [
         {
           "path": "App/AppModel.swift",
-          "line": 398
+          "line": 446
         },
         {
           "path": "App/Views/OnboardingView.swift",
@@ -1203,11 +1209,11 @@
       "cited_by": [
         {
           "path": "App/AppModel.swift",
-          "line": 56
+          "line": 58
         },
         {
           "path": "App/AppModel.swift",
-          "line": 169
+          "line": 212
         },
         {
           "path": "App/LoginItem.swift",
@@ -1280,16 +1286,6 @@
           "line": 36
         }
       ]
-    },
-    {
-      "id": "FR-14",
-      "kind": "FR",
-      "proposed": true,
-      "declared_in": "requirements#10",
-      "mentioned_in": [
-        "requirements#10"
-      ],
-      "cited_by": []
     },
     {
       "id": "T1",
@@ -1652,11 +1648,11 @@
         },
         {
           "path": "App/AppModel.swift",
-          "line": 217
+          "line": 262
         },
         {
           "path": "App/AppModel.swift",
-          "line": 254
+          "line": 299
         },
         {
           "path": "CoreKit/Sources/CoreKit/FSEventsStream.swift",
@@ -2334,11 +2330,6 @@
       "relation": "contains"
     },
     {
-      "from": "requirements#10",
-      "to": "FR-14",
-      "relation": "mentions"
-    },
-    {
       "from": "requirements",
       "to": "requirements#10.1",
       "relation": "contains"
@@ -2899,6 +2890,11 @@
       "relation": "cites"
     },
     {
+      "from": "App/AppModel.swift",
+      "to": "FR-7",
+      "relation": "cites"
+    },
+    {
       "from": "App/MenuBarIcon.swift",
       "to": "FR-7",
       "relation": "cites"
@@ -2915,6 +2911,11 @@
     },
     {
       "from": "App/Views/MenuContentView.swift",
+      "to": "FR-7",
+      "relation": "cites"
+    },
+    {
+      "from": "scripts/make-menubar-icon.swift",
       "to": "FR-7",
       "relation": "cites"
     },

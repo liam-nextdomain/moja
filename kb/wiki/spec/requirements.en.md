@@ -2,8 +2,8 @@
 id: requirements
 title: "macOS menu bar app that converts Korean file names to NFC: v1 requirements"
 type: requirements
-version: "1.6"
-date: "2026-09-09"
+version: "1.8"
+date: "2026-09-10"
 lang: en
 parents: []
 entities:
@@ -456,8 +456,8 @@ the table too far, so record which one it was in the Notes column at verificatio
    is settled.
 2. **Default watched folders**: whether onboarding pre-checks Desktop, Downloads and Documents, or
    starts empty.
-3. **Resume behaviour after a pause**: whether a full rescan (the FR-14 basis) is the default, or
-   only events after the resume are seen.
+3. **Resume behaviour after a pause**: whether a full rescan is the default, or only events after
+   the resume are seen.
 
 ### 10.1 Decisions (2026-09-04)
 
@@ -578,7 +578,7 @@ built on a C callback with a context pointer, which collides head-on with strict
 discipline, and the move to Swift 6 mode is deferred past the v1 release. The document's
 "Swift 5.9+" requirement is satisfied.
 
-### 12.4a T1's "within 2 seconds" is incompatible with FR-2 ⚠️ decision needed
+### 12.4a T1's "within 2 seconds" is incompatible with FR-2
 
 Measured: **3.09 seconds** from creating a decomposed name in a watched folder to it becoming
 composed.
