@@ -35,7 +35,7 @@ enum LoginItem {
             return nil
         } catch {
             if isBlockedBySystemSettings {
-                return "시스템 설정 → 일반 → 로그인 항목에서 모자를 켜 주세요."
+                return "시스템 설정 → 일반 → 로그인 항목에서 Moja를 켜 주세요."
             }
             return "자동 실행을 설정하지 못했습니다. 앱을 응용 프로그램 폴더로 옮긴 뒤 다시 시도해 주세요."
         }

@@ -25,7 +25,7 @@ struct MenuContentView: View {
 
         Divider()
 
-        Button(model.isPaused ? "감시 재개" : "감시 일시정지") { model.togglePause() }
+        Button(model.isPaused ? "관리 재개" : "관리 일시정지") { model.togglePause() }
 
         Toggle("로그인 시 자동 실행", isOn: Binding(
             get: { model.launchAtLogin },
@@ -39,7 +39,7 @@ struct MenuContentView: View {
         Divider()
 
         Button("도움말 / 정보") { model.showHelp() }
-        Button("모자 종료") { model.quit() }
+        Button("Moja 종료") { model.quit() }
             .keyboardShortcut("q")
     }
 

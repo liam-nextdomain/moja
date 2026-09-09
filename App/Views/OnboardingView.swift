@@ -16,10 +16,10 @@ struct OnboardingView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             VStack(alignment: .leading, spacing: 6) {
-                Text("모자")
+                Text("Moja")
                     .font(.title2.weight(.semibold))
-                Text("맥에서 만든 한글 파일 이름은 Windows에서 자모가 흩어져 보일 때가 있습니다.\n"
-                     + "고를 폴더를 지켜보다가, 그런 이름이 생기면 바로 되돌려 놓습니다.")
+                Text("맥에서 저장한 한글 파일 이름은 윈도우에서 'ㅂㅗㄱㅗㅅㅓ.docx' 처럼 깨집니다.\n"
+                     + "Moja는 윈도우에서도 한글 파일 이름이 멀쩡하게 보이도록 관리해 줍니다.")
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -27,7 +27,7 @@ struct OnboardingView: View {
             Divider()
 
             VStack(alignment: .leading, spacing: 8) {
-                Text("지켜볼 폴더")
+                Text("관리할 폴더")
                     .font(.headline)
 
                 ForEach(suggestions, id: \.path) { suggestion in
@@ -44,8 +44,8 @@ struct OnboardingView: View {
                     .buttonStyle(.link)
                     .padding(.top, 2)
 
-                Text("데스크탑·문서·다운로드를 고르면 macOS가 접근을 허락할지 물어봅니다. "
-                     + "\"허용\"을 눌러 주세요.")
+                Text("데스크탑·다운로드·문서를 고르면 macOS가 접근을 허락할지 한 번 더 묻습니다. "
+                     + "\"허용\"을 눌러 동의해 주시면 됩니다.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)

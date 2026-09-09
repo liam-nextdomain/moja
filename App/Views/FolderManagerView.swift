@@ -27,7 +27,7 @@ struct FolderManagerView: View {
                 .disabled(selection == nil)
 
                 Spacer()
-                Text("폴더 안의 하위 폴더까지 함께 지켜봅니다.")
+                Text("폴더 안의 하위 폴더까지 함께 관리합니다.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
             }
@@ -38,7 +38,7 @@ struct FolderManagerView: View {
 
     private var emptyState: some View {
         VStack(spacing: 8) {
-            Text("지켜보는 폴더가 없습니다")
+            Text("관리하는 폴더가 없습니다")
                 .foregroundStyle(.secondary)
             Button("폴더 추가…") { model.presentFolderPicker() }
         }

@@ -1,6 +1,6 @@
 import Foundation
 
-/// 모자의 순수 로직 계층.
+/// Moja의 순수 로직 계층.
 ///
 /// UI(AppKit/SwiftUI)에 의존하지 않는다. 앱을 띄우지 않고
 /// `swift test --package-path CoreKit` 으로 전부 검증할 수 있어야 한다.

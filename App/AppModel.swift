@@ -92,7 +92,7 @@ final class AppModel: ObservableObject {
     // MARK: - 생애주기
 
     func start() {
-        log.note("모자를 시작했습니다 (\(settings.folders.count)개 폴더)")
+        log.note("Moja를 시작했습니다 (\(settings.folders.count)개 폴더)")
         if settings.hasCompletedOnboarding {
             syncWatchers()
         } else {
@@ -101,7 +101,7 @@ final class AppModel: ObservableObject {
     }
 
     func quit() {
-        log.note("모자를 종료했습니다")
+        log.note("Moja를 종료했습니다")
         NSApplication.shared.terminate(nil)
     }
 
@@ -114,14 +114,14 @@ final class AppModel: ObservableObject {
     private var hasProblem: Bool { statuses.contains { $0.condition.isProblem } }
 
     var statusLineText: String {
-        if settings.folders.isEmpty { return "감시 중인 폴더가 없습니다" }
+        if settings.folders.isEmpty { return "관리 중인 폴더가 없습니다" }
         if isPaused { return "일시정지됨" }
         let active = statuses.filter { $0.condition == .watching }.count
-        return "감시 중 (\(active)개 폴더)"
+        return "관리 중 (\(active)개 폴더)"
     }
 
     var statusAccessibilityLabel: String {
-        "모자, " + statusLineText
+        "Moja, " + statusLineText
     }
 
     // MARK: - 폴더 (FR-1)
@@ -154,7 +154,7 @@ final class AppModel: ObservableObject {
     func togglePause() {
         isPaused.toggle()
         settings.isPaused = isPaused
-        log.note(isPaused ? "감시를 일시정지했습니다" : "감시를 재개했습니다")
+        log.note(isPaused ? "관리를 일시정지했습니다" : "관리를 재개했습니다")
 
         if isPaused {
             watchers.values.forEach { $0.stop() }
@@ -304,7 +304,7 @@ final class AppModel: ObservableObject {
                     self.updateCondition(id, to: self.settings.folders
                         .first { $0.id == id }?.isEnabled == false ? .off : .watching)
                 }
-                self.log.note("다시 연결된 폴더의 감시를 재개합니다 (\(returned.count)개)")
+                self.log.note("다시 연결된 폴더의 관리를 재개합니다 (\(returned.count)개)")
                 self.syncWatchers()
                 if !self.hasDisconnectedFolder { self.stopReconnectWatch() }
             }
@@ -314,7 +314,7 @@ final class AppModel: ObservableObject {
     // MARK: - 창
 
     func showOnboarding() {
-        presenter.show(id: "onboarding", title: "모자", size: CGSize(width: 460, height: 400)) {
+        presenter.show(id: "onboarding", title: "Moja", size: CGSize(width: 460, height: 400)) {
             OnboardingView().environmentObject(self)
         }
     }
@@ -388,7 +388,7 @@ final class AppModel: ObservableObject {
     }
 
     func showHelp() {
-        presenter.show(id: "help", title: "모자 정보", size: CGSize(width: 460, height: 480)) {
+        presenter.show(id: "help", title: "Moja 정보", size: CGSize(width: 460, height: 480)) {
             HelpView()
         }
     }
@@ -404,7 +404,7 @@ final class AppModel: ObservableObject {
         panel.canChooseFiles = false
         panel.allowsMultipleSelection = true
         panel.prompt = "추가"
-        panel.message = "감시할 폴더를 고르세요."
+        panel.message = "관리할 폴더를 고르세요."
 
         NSApp.activate(ignoringOtherApps: true)
         guard panel.runModal() == .OK else { return }
