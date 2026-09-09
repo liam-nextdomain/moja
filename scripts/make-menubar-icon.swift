@@ -22,7 +22,7 @@ let sourceSVG = root.appendingPathComponent("design/app-icon.svg")
 let catalog = root.appendingPathComponent("App/Resources/Assets.xcassets")
 let sRGB = CGColorSpace(name: CGColorSpace.sRGB)!
 
-/// #cap이 놓인 좌표계의 한 변. app-icon.svg가 `scale(0.39082)`로 800pt에 맞춰 넣고 있다.
+/// #cap이 놓인 좌표계의 한 변. app-icon.svg가 `scale(0.44922)`로 920pt에 맞춰 넣고 있다.
 let capCoordinateSpace = 2048
 /// 메뉴바에서 쓸 논리 높이. 지금까지 쓰던 `hat.widebrim` 15pt가 16pt 높이였다.
 let logicalHeight = 16
