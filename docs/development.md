@@ -9,6 +9,7 @@ brew install xcodegen          # 빌드 도구. 앱 자체의 서드파티 의�
 ./scripts/test.sh              # CoreKit 단위·통합 테스트 (138개)
 ./scripts/release.sh           # 릴리스 빌드 → zip
 swift scripts/acceptance.swift # 수용 기준 자동 검증 (실제 앱을 띄워 확인)
+swift scripts/make-appicon.swift # 앱 아이콘 PNG 재생성 (design/app-icon.svg에서)
 open Moja.xcodeproj            # Xcode에서 열기
 ```
 
@@ -26,10 +27,25 @@ CoreKit/   변환 로직                        순수 Foundation, UI 의존 없
            Watcher     FSEvents, 디바운스, 무시 목록
            Store       설정, 로그
 scripts/   빌드·테스트·릴리스·수용 검증·픽스처·지식 베이스 도구
+design/    앱 아이콘 원본 (app-icon.svg)                 자산 카탈로그의 PNG는 여기서 파생된다
 kb/wiki/   요구사항, 측정 기록, 수용 결과                지식 그래프가 관계를 잇는다
 kb/raw/    외부 원자료 (볼륨 실측 출력, 참고 문헌)       쓴 뒤 고치지 않는다
 docs/      개발 문서(이 파일), README 스크린샷
 ```
+
+## 앱 아이콘
+
+`design/app-icon.svg`가 유일한 원본입니다. 아이콘을 바꿀 때에는 이 SVG만 고친 다음 아래 명령을
+실행하면, `App/Resources/Assets.xcassets/AppIcon.appiconset/`의 PNG 열 장과 `Contents.json`이
+전부 다시 만들어집니다. 자산 카탈로그의 `AppIcon` 슬롯은 벡터를 직접 받지 못하기 때문에 PNG가
+필요하며, 큰 PNG 한 장을 축소하는 대신 각 슬롯의 픽셀 크기로 벡터에서 직접 그립니다.
+
+```sh
+swift scripts/make-appicon.swift
+```
+
+생성된 PNG는 파생물이지만 저장소에 함께 넣어 둡니다. XcodeGen이 만든 프로젝트를 내려받아 곧바로
+빌드할 수 있어야 하기 때문입니다.
 
 ## 테스트 파일 만들기
 
