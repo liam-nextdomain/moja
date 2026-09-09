@@ -388,7 +388,7 @@ final class AppModel: ObservableObject {
     }
 
     func showHelp() {
-        presenter.show(id: "help", title: "모자 정보", size: CGSize(width: 460, height: 380)) {
+        presenter.show(id: "help", title: "모자 정보", size: CGSize(width: 460, height: 480)) {
             HelpView()
         }
     }
