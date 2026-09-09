@@ -8,8 +8,9 @@ brew install xcodegen          # 빌드 도구. 앱 자체의 서드파티 의�
 ./scripts/build.sh             # 빌드 → build/Build/Products/Debug/Moja.app
 ./scripts/test.sh              # CoreKit 단위·통합 테스트 (138개)
 ./scripts/release.sh           # 릴리스 빌드 → zip
-swift scripts/acceptance.swift # 수용 기준 자동 검증 (실제 앱을 띄워 확인)
-swift scripts/make-appicon.swift # 앱 아이콘 PNG 재생성 (design/app-icon.svg에서)
+swift scripts/acceptance.swift  # 수용 기준 자동 검증 (실제 앱을 띄워 확인)
+swift scripts/make-appicon.swift     # 앱 아이콘 PNG 재생성 (design/app-icon.svg에서)
+swift scripts/make-menubar-icon.swift # 메뉴바 아이콘 PNG 재생성 (같은 SVG에서)
 open Moja.xcodeproj            # Xcode에서 열기
 ```
 
@@ -27,7 +28,7 @@ CoreKit/   변환 로직                        순수 Foundation, UI 의존 없
            Watcher     FSEvents, 디바운스, 무시 목록
            Store       설정, 로그
 scripts/   빌드·테스트·릴리스·수용 검증·픽스처·지식 베이스 도구
-design/    앱 아이콘 원본 (app-icon.svg)                 자산 카탈로그의 PNG는 여기서 파생된다
+design/    아이콘 원본 (app-icon.svg)                    앱·메뉴바 아이콘 PNG가 모두 여기서 파생된다
 kb/wiki/   요구사항, 측정 기록, 수용 결과                지식 그래프가 관계를 잇는다
 kb/raw/    외부 원자료 (볼륨 실측 출력, 참고 문헌)       쓴 뒤 고치지 않는다
 docs/      개발 문서(이 파일), README 스크린샷
@@ -46,6 +47,33 @@ swift scripts/make-appicon.swift
 
 생성된 PNG는 파생물이지만 저장소에 함께 넣어 둡니다. XcodeGen이 만든 프로젝트를 내려받아 곧바로
 빌드할 수 있어야 하기 때문입니다.
+
+## 메뉴바 아이콘
+
+메뉴바 아이콘도 같은 `design/app-icon.svg`에서 나옵니다. 그 안의 `#cap` 그룹만 뽑아 두 벌을
+굽기 때문에, 앱 아이콘과 메뉴바 아이콘의 모양이 서로 어긋날 일이 없습니다.
+
+| 자산 이름 | 언제 보이는가 | 모습 |
+|---|---|---|
+| `MenuBarCap` | 평상시 | 윤곽선만 남긴 모자 |
+| `MenuBarCapFilled` | 이름을 바꾸는 동안 | 속을 채운 모자 |
+
+```sh
+swift scripts/make-menubar-icon.swift
+```
+
+두 이미지는 캔버스 크기가 같으므로 서로 바뀌어도 메뉴바 항목이 옆으로 움직이지 않습니다. 채움은
+모자 전체를 통으로 칠하는 방식이 아니라, 칠한 다음 원본의 검은 선을 도로 파내는 방식입니다.
+통으로 칠하면 챙과 크라운이 한 덩어리로 뭉쳐서 16pt 크기에서는 모자로 보이지 않습니다.
+
+두 자산 모두 template 이미지로 표시되므로, 밝은 메뉴바에서는 검게 어두운 메뉴바에서는 희게
+칠해집니다. `Contents.json`의 `template-rendering-intent`가 그 역할을 맡습니다. 이 한 줄이
+빠지면 어느 쪽에서도 원본 색 그대로 나옵니다.
+
+채운 모자로 바뀌는 조건은 `App/AppModel.swift`의 `isConverting`이 정합니다. 실시간 감시가
+수행하는 변환은 수십 밀리초 만에 끝나기 때문에 걸린 시간만큼만 채우면 사용자가 아무것도 보지
+못합니다. 그래서 이름이 한 번 바뀌면 1.2초 동안 켜 두고, 그 사이에 또 바뀌면 시간을 처음부터
+다시 잽니다. 일괄 변환은 실제로 도는 내내 켭니다.
 
 ## 테스트 파일 만들기
 
