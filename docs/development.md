@@ -88,6 +88,29 @@ swift scripts/make-menubar-icon.swift
 > **바꿔서** 복사합니다. 실제로 이 문제를 겪은 적이 있습니다
 > ([kb/wiki/research/rename-measurements.md](../kb/wiki/research/rename-measurements.md) 2.4절).
 
+## 고친 것을 설치본에 반영하기
+
+`./scripts/build.sh`가 만드는 것은 `build/Build/Products/Debug/Moja.app`이고, 평소에 쓰는
+`/Applications/Moja.app`은 손대지 않습니다. 그래서 코드를 고치고 빌드만 해서는 메뉴바에 예전
+버전이 그대로 보입니다. 실제로 쓰는 앱에 반영하려면 릴리스 빌드를 만들어 직접 교체해야 합니다.
+
+```sh
+osascript -e 'quit app "Moja"'                     # 실행 중이면 먼저 종료합니다
+./scripts/release.sh                               # build/export/Moja.app 과 zip 을 만듭니다
+ditto build/export/Moja.app /Applications/Moja.app
+```
+
+`/Applications`는 관리자 계정이 소유하므로 `sudo`가 필요하지 않습니다. `cp -R` 대신 `ditto`를
+쓰는 이유는 확장 속성과 서명 자원을 온전히 옮기기 위해서입니다.
+
+감시 폴더 설정은 `UserDefaults`에, 변환 기록은 `~/Library/Logs/Moja/`에 남으므로 앱을 교체해도
+그대로 유지됩니다.
+
+> **로그인 항목을 확인하세요**: `SMAppService`는 등록을 앱의 코드 서명에 묶습니다. Developer ID
+> 없이 ad-hoc으로 서명하는 동안에는 빌드할 때마다 서명이 달라지므로, 앱을 교체한 다음 자동
+> 실행이 꺼져 있을 수 있습니다. 교체한 뒤 메뉴에서 한 번 확인하시기 바랍니다
+> ([App/LoginItem.swift](../App/LoginItem.swift)).
+
 ## 문서
 
 - [kb/wiki/spec/requirements.md](../kb/wiki/spec/requirements.md): v1 요구사항과 구현이 문서와 달라진 지점
