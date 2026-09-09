@@ -23,6 +23,8 @@ final class BatchSession: ObservableObject {
     private let root: String
     private let queue: DispatchQueue
     private let renamer: Renamer
+    /// 변환이 시작하고 끝나는 것을 바깥에 알린다. 메뉴바 아이콘이 이걸 보고 채워진다.
+    private let onConverting: (Bool) -> Void
     private let onFinish: ([RenameResult]) -> Void
     private let onClose: () -> Void
 
@@ -30,12 +32,14 @@ final class BatchSession: ObservableObject {
          folderName: String,
          queue: DispatchQueue,
          renamer: Renamer,
+         onConverting: @escaping (Bool) -> Void,
          onFinish: @escaping ([RenameResult]) -> Void,
          onClose: @escaping () -> Void) {
         self.root = root
         self.folderName = folderName
         self.queue = queue
         self.renamer = renamer
+        self.onConverting = onConverting
         self.onFinish = onFinish
         self.onClose = onClose
     }
@@ -60,8 +64,12 @@ final class BatchSession: ObservableObject {
     func convert() {
         guard case .ready(let preview) = phase else { return }
         phase = .converting(done: 0, total: preview.count)
+        onConverting(true)
 
         let renamer = renamer
+        // 창이 먼저 닫혀 이 세션이 사라지더라도 "변환 중" 표시는 반드시 꺼야 한다.
+        // self를 거치면 그때 알림이 통째로 사라지므로 클로저만 따로 붙든다.
+        let onConverting = self.onConverting
         queue.async { [weak self] in
             let result = BatchConverter.apply(preview, using: renamer) { done, total in
                 Task { @MainActor in
@@ -70,6 +78,7 @@ final class BatchSession: ObservableObject {
                 }
             }
             Task { @MainActor in
+                onConverting(false)
                 guard let self else { return }
                 self.phase = .finished(result)
                 self.onFinish(result.results)

@@ -51,6 +51,8 @@ final class AppModel: ObservableObject {
 
     @Published private(set) var statuses: [FolderStatus] = []
     @Published private(set) var isPaused: Bool = false
+    /// 지금 이름을 바꾸고 있다. 메뉴바 아이콘이 속을 채운 모자로 바뀐다 (FR-7).
+    @Published private(set) var isConverting: Bool = false
     @Published private(set) var recentEntries: [LogEntry] = []
     @Published private(set) var launchAtLogin: Bool = false
     /// 로그인 항목 등록이 막혔을 때의 안내 문구 (FR-9).
@@ -69,6 +71,10 @@ final class AppModel: ObservableObject {
     /// 끊긴 폴더가 있는 동안만 살아 있는 재연결 감시 장치.
     private var reconnectTimer: Timer?
     private var mountObserver: NSObjectProtocol?
+    /// 실시간 변환을 알린 뒤 아이콘을 되돌릴 예약. 연달아 바뀌면 취소하고 다시 건다.
+    private var flashReset: Task<Void, Never>?
+    /// 지금 도는 일괄 변환의 수. 하나라도 돌면 예약과 무관하게 계속 켜 둔다.
+    private var runningBatches = 0
 
     convenience init() {
         // 수용 테스트가 실제 설정·로그를 건드리지 않도록 열어 둔 이음매다.
@@ -107,11 +113,48 @@ final class AppModel: ObservableObject {
 
     // MARK: - 메뉴바 표시 (FR-7)
 
-    var iconImage: NSImage { MenuBarIcon.image(hasProblem: hasProblem) }
+    var iconImage: NSImage {
+        MenuBarIcon.image(hasProblem: hasProblem, isConverting: isConverting)
+    }
 
     var iconOpacity: Double { isPaused ? 0.4 : 1.0 }
 
     private var hasProblem: Bool { statuses.contains { $0.condition.isProblem } }
+
+    /// 실시간 변환 한 번을 보여 줄 최소 시간.
+    ///
+    /// 이름을 바꾸는 일 자체는 수십 밀리초에 끝나므로, 걸린 시간만큼만 아이콘을 채우면
+    /// 사용자는 아무것도 보지 못한다. 반대로 너무 길게 잡으면 변환이 다 끝난 뒤에도
+    /// 한참 채워져 있어서 아직 일하는 중이라고 잘못 읽게 된다.
+    private static let flashDuration: Duration = .milliseconds(1200)
+
+    /// 파일 이름을 바꿨다고 알린다. 아이콘을 잠시 속이 찬 모자로 바꾼다.
+    private func flashConverting() {
+        flashReset?.cancel()
+        flashReset = Task { [weak self] in
+            try? await Task.sleep(for: Self.flashDuration)
+            guard !Task.isCancelled, let self else { return }
+            self.flashReset = nil
+            self.updateConverting()
+        }
+        updateConverting()
+    }
+
+    /// 일괄 변환이 시작하고 끝나는 것을 센다. 창을 닫아도 변환은 계속 돌 수 있다.
+    private func noteBatch(converting: Bool) {
+        runningBatches = max(0, runningBatches + (converting ? 1 : -1))
+        updateConverting()
+    }
+
+    private func updateConverting() {
+        isConverting = runningBatches > 0 || flashReset != nil
+    }
+
+    /// 이름이 실제로 바뀐 결과인지. 충돌과 실패는 아이콘을 채울 이유가 되지 못한다.
+    private static func didRename(_ result: RenameResult) -> Bool {
+        if case .renamed = result { return true }
+        return false
+    }
 
     var statusLineText: String {
         if settings.folders.isEmpty { return "관리 중인 폴더가 없습니다" }
@@ -207,6 +250,8 @@ final class AppModel: ObservableObject {
             log.record(results)
             recentEntries = log.recent
             updateCondition(folderID, to: .watching)
+            // 충돌과 실패만 담겨 올 수도 있다. 정말 바뀐 것이 있을 때만 아이콘을 채운다.
+            if results.contains(where: Self.didRename) { flashConverting() }
 
         case .overflowed(let candidates):
             updateCondition(folderID, to: .overflowing(candidates: candidates))
@@ -347,6 +392,9 @@ final class AppModel: ObservableObject {
             folderName: status.name,
             queue: fileQueue,
             renamer: Renamer(volumes: volumes),
+            onConverting: { [weak self] converting in
+                Task { @MainActor in self?.noteBatch(converting: converting) }
+            },
             onFinish: { [weak self] results in
                 Task { @MainActor in
                     guard let self else { return }
