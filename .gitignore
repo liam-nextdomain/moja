@@ -24,7 +24,8 @@ xcuserdata/
 # 로컬 테스트 픽스처 (make-nfd-fixtures.sh 출력)
 /fixtures/
 
-# Claude Code 로컬 산출물. 로드맵은 커밋하지 않는다.
-# 전제: 커밋된 문서만으로 /progress init 이 로드맵을 다시 만들 수 있어야 한다.
-.claude/progress/
-.claude/settings.local.json
+# Claude Code 작업 환경. 규칙, 스킬, 출력 스타일, 로드맵 전부 커밋하지 않는다.
+# 앱을 빌드하고 테스트하는 데 필요하지 않은 관리용 자산이기 때문이다.
+# 개발자가 읽어야 하는 내용은 docs/development.md 와 kb/wiki/ 에 남아 있다.
+.claude/
+CLAUDE.md
