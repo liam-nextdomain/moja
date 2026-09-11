@@ -2,8 +2,8 @@
 id: acceptance-results
 title: "Acceptance criteria results"
 type: verification
-version: "1.0"
-date: "2026-09-05"
+version: "1.1"
+date: "2026-09-11"
 lang: en
 parents:
   - id: requirements
@@ -21,7 +21,7 @@ entities:
     code: [scripts/acceptance.swift]
   - name: unverified-scenario
     type: concept
-    definition: "T13 (re-login), T15 (24 hours idle) and T16 (opening on Windows), left because this environment offers no way to check them. the last thing blocking v1.0.0"
+    definition: "T15 (24 hours idle) and T16 (opening on Windows), left because this environment offers no way to check them. the last thing blocking v1.0.0"
   - name: reconnect-recovery
     type: mechanism
     definition: "recovery that releases the watcher of a folder that went 'not connected' and listens for volume mount notifications, running a secondary sweep only while at least one folder is disconnected, for network shares that send no notification"
@@ -33,13 +33,14 @@ tags: [verification, acceptance, release-gate, unverified]
 
 # Acceptance criteria results
 
-> Translation of [acceptance-results.md](acceptance-results.md) v1.0. The Korean edition is the
+> Translation of [acceptance-results.md](acceptance-results.md) v1.1. The Korean edition is the
 > source of record where wording differs. Do not edit here.
 
 Verification results for T1-T16 of requirements §7.
 
-- Verified: 2026-09-05
-- Target: `Moja.app` (Debug build), macOS 27.0, Apple Silicon
+- Verified: 2026-09-05. T13 alone was checked separately on 2026-09-11.
+- Target: `Moja.app` (Debug build), macOS 27.0, Apple Silicon.
+  T13 was checked against a Release build installed in `/Applications`.
 - Automated: `swift scripts/acceptance.swift`. It launches the real app and checks with real files.
   The user's settings and logs are never touched (the app takes the `MOJA_DEFAULTS_SUITE` and
   `MOJA_LOG_DIR` environment variables).
@@ -62,7 +63,7 @@ Verification results for T1-T16 of requirements §7.
 | T10 | 1,000 files dropped at once | ✅ | auto | flagged as an overflow; nothing touched |
 | T11 | detach an external disk and restart | ✅ | auto | runs without error; watching resumes on reconnect |
 | T12 | batch conversion preview | ✅ | manual | count and before/after names correct; `취소` changes nothing |
-| T13 | launch at login, then re-login | ⏳ | — | **unverified** (see §2) |
+| T13 | launch at login, then re-login | ✅ | manual | in the menu bar right after the re-login. the build is ad-hoc signed, so it must be checked again after a Developer ID signature |
 | T14 | created while paused, then resumed | ✅ | auto | untouched while paused, converted by the rescan on resume |
 | T15 | 24 hours idle | ⏳ | — | **unverified** (see §2) |
 | T16 | zip it and open on Windows | ⏳ | — | **unverified** (see §2) |
@@ -74,21 +75,23 @@ The 12 automated checks can be re-run at any time with `scripts/acceptance.swift
 swift scripts/acceptance.swift
 ```
 
+### T13: launch at login
+
+Checked by hand on 2026-09-11. With launch at login turned on in a Release build installed in
+`/Applications`, the app was in the menu bar right after logging back in. The system boot time
+and the app's process start time matched, and the login item registration pointed at
+`/Applications/Moja.app`.
+
+The build is still **ad-hoc signed**, though. Nothing was rebuilt after it was installed, so the
+signature stayed the same and the registration was able to survive. Attaching a Developer ID
+signature changes the code signature and invalidates the existing registration, so whether
+re-registration then works correctly **has to be checked again**.
+
 ---
 
 ## 2. Not yet verified
 
-Stated plainly: there was no way to check the three below in this environment.
-
-### T13: launch at login
-
-It needs a real logout and re-login. On top of that the build is **ad-hoc signed**, so the check
-would not mean anything. `SMAppService` ties the registration to the app's code signature, and an
-ad-hoc signature changes on every build, so a development build cannot show whether the
-registration survives a re-login.
-
-**To do**: put a release build in `/Applications`, turn on launch at login, then log out and back
-in and confirm it appears in the menu bar. Check again after attaching a Developer ID signature.
+Stated plainly: there was no way to check the two below in this environment.
 
 ### T15: 24 hours idle (memory under 30MB)
 

@@ -15,8 +15,8 @@
       "type": "document",
       "doc_type": "verification",
       "title": "Acceptance criteria results",
-      "version": "1.0",
-      "date": "2026-09-05",
+      "version": "1.1",
+      "date": "2026-09-11",
       "path": "spec/acceptance-results.en.md",
       "tags": [
         "verification",
@@ -71,7 +71,7 @@
       "id": "unverified-scenario",
       "type": "entity",
       "entity_type": "concept",
-      "definition": "T13 (re-login), T15 (24 hours idle) and T16 (opening on Windows), left because this environment offers no way to check them. the last thing blocking v1.0.0"
+      "definition": "T15 (24 hours idle) and T16 (opening on Windows), left because this environment offers no way to check them. the last thing blocking v1.0.0"
     },
     {
       "id": "reconnect-recovery",

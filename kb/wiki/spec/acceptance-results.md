@@ -2,8 +2,8 @@
 id: acceptance-results
 title: "수용 기준 결과"
 type: verification
-version: "1.0"
-date: "2026-09-05"
+version: "1.1"
+date: "2026-09-11"
 parents:
   - id: requirements
     version: "1.0"
@@ -20,7 +20,7 @@ entities:
     code: [scripts/acceptance.swift]
   - name: unverified-scenario
     type: concept
-    definition: "이 환경에서 확인할 방법이 없어 남은 T13(재로그인), T15(24시간 방치), T16(Windows에서 열기). v1.0.0의 마지막 차단 요인이다"
+    definition: "이 환경에서 확인할 방법이 없어 남은 T15(24시간 방치)와 T16(Windows에서 열기). v1.0.0의 마지막 차단 요인이다"
   - name: reconnect-recovery
     type: mechanism
     definition: "'연결 안 됨'이 된 폴더의 감시자를 놓아 주고 볼륨 마운트 알림을 듣되, 알림이 오지 않는 네트워크 공유를 위해 끊긴 폴더가 하나라도 있는 동안에만 보조 확인을 도는 복구 방식"
@@ -34,8 +34,9 @@ tags: [verification, acceptance, release-gate, unverified]
 
 요구사항 7장 T1~T16의 검증 결과.
 
-- 검증일: 2026-09-05
-- 대상: `Moja.app` (Debug 빌드), macOS 27.0, Apple Silicon
+- 검증일: 2026-09-05. T13만 2026-09-11에 따로 확인했다.
+- 대상: `Moja.app` (Debug 빌드), macOS 27.0, Apple Silicon.
+  T13은 `/Applications`에 설치한 Release 빌드로 확인했다.
 - 자동 검증: `swift scripts/acceptance.swift`. 진짜 앱을 띄워 진짜 파일로 확인한다.
   사용자의 설정·로그는 건드리지 않는다 (앱이 `MOJA_DEFAULTS_SUITE`,
   `MOJA_LOG_DIR` 환경변수를 받는다).
@@ -58,7 +59,7 @@ tags: [verification, acceptance, release-gate, unverified]
 | T10 | 1,000개를 한 번에 투입 | ✅ | 자동 | 폭주로 표시, 하나도 건드리지 않음 |
 | T11 | 외장 디스크 분리 후 재시작 | ✅ | 자동 | 오류 없이 실행, 재연결 시 감시 재개 |
 | T12 | 일괄 변환 미리보기 | ✅ | 사람 | 개수·전후 이름 정확, "취소"로 아무것도 안 바뀜 |
-| T13 | 로그인 시 자동 실행 후 재로그인 | ⏳ | — | **미검증** (2절 참조) |
+| T13 | 로그인 시 자동 실행 후 재로그인 | ✅ | 사람 | 재로그인 직후 메뉴바에 떠 있음. ad-hoc 서명이므로 Developer ID 서명 뒤에 다시 확인해야 한다 |
 | T14 | 일시정지 중 생성 → 재개 | ✅ | 자동 | 정지 중 그대로, 재개 시 재스캔으로 변환 |
 | T15 | 24시간 방치 | ⏳ | — | **미검증** (2절 참조) |
 | T16 | zip으로 압축해 Windows에서 열기 | ⏳ | — | **미검증** (2절 참조) |
@@ -70,21 +71,23 @@ tags: [verification, acceptance, release-gate, unverified]
 swift scripts/acceptance.swift
 ```
 
+### T13: 로그인 시 자동 실행
+
+2026-09-11에 사람이 직접 확인했다. `/Applications`에 설치한 Release 빌드에서 자동
+실행을 켜 두고 재로그인했더니 로그인 직후에 메뉴바에 떠 있었다. 시스템 부팅 시각과
+앱의 프로세스 시작 시각이 같았고, 로그인 항목 등록도 `/Applications/Moja.app`을
+가리키고 있었다.
+
+다만 이 빌드는 아직 **ad-hoc 서명**이다. 설치한 뒤로 다시 빌드하지 않았기 때문에
+서명이 그대로 유지되어 등록이 살아남을 수 있었다. Developer ID 서명을 붙이면 코드
+서명이 달라져서 기존 등록이 무효가 되므로, 그때 재등록이 제대로 이루어지는지는
+**다시 확인해야 한다.**
+
 ---
 
 ## 2. 아직 검증하지 못한 것
 
-솔직하게 적는다. 아래 셋은 이 환경에서 확인할 방법이 없었다.
-
-### T13: 로그인 시 자동 실행
-
-실제 로그아웃·재로그인이 필요하다. 더불어 지금은 **ad-hoc 서명**이라 의미 있는
-검증이 되지 않는다. `SMAppService`는 등록을 앱의 코드 서명에 묶는데, ad-hoc 서명은
-빌드할 때마다 달라지므로 개발 빌드로는 재로그인 후 살아남는지 확인할 수 없다.
-
-**해야 할 일**: 릴리스 빌드를 `/Applications`에 두고, 자동 실행을 켠 뒤
-로그아웃·재로그인해서 메뉴바에 떠 있는지 확인한다. Developer ID 서명을 붙인
-뒤에 다시 한 번 확인한다.
+솔직하게 적는다. 아래 둘은 이 환경에서 확인할 방법이 없었다.
 
 ### T15: 24시간 방치 (메모리 30MB 이하)
 

@@ -16,8 +16,8 @@
       "level": 2,
       "num": "1",
       "heading": "Results",
-      "line_start": 49,
-      "line_end": 78,
+      "line_start": 50,
+      "line_end": 77,
       "symbols_declared": [
         "T1",
         "T2",
@@ -39,29 +39,29 @@
       "symbols_mentioned": []
     },
     {
-      "id": "acceptance-results#2",
-      "doc": "acceptance-results",
-      "path": "spec/acceptance-results.en.md",
-      "level": 2,
-      "num": "2",
-      "heading": "Not yet verified",
-      "line_start": 79,
-      "line_end": 82,
-      "symbols_declared": [],
-      "symbols_mentioned": []
-    },
-    {
       "id": "acceptance-results#T13",
       "doc": "acceptance-results",
       "path": "spec/acceptance-results.en.md",
       "level": 3,
       "num": "T13",
       "heading": "launch at login",
-      "line_start": 83,
-      "line_end": 92,
+      "line_start": 78,
+      "line_end": 91,
       "symbols_declared": [
         "T13"
       ],
+      "symbols_mentioned": []
+    },
+    {
+      "id": "acceptance-results#2",
+      "doc": "acceptance-results",
+      "path": "spec/acceptance-results.en.md",
+      "level": 2,
+      "num": "2",
+      "heading": "Not yet verified",
+      "line_start": 92,
+      "line_end": 95,
+      "symbols_declared": [],
       "symbols_mentioned": []
     },
     {
@@ -71,8 +71,8 @@
       "level": 3,
       "num": "T15",
       "heading": "24 hours idle (memory under 30MB)",
-      "line_start": 93,
-      "line_end": 102,
+      "line_start": 96,
+      "line_end": 105,
       "symbols_declared": [
         "T15"
       ],
@@ -85,8 +85,8 @@
       "level": 3,
       "num": "T16",
       "heading": "opening on Windows",
-      "line_start": 103,
-      "line_end": 115,
+      "line_start": 106,
+      "line_end": 118,
       "symbols_declared": [
         "T16"
       ],
@@ -99,8 +99,8 @@
       "level": 2,
       "num": "3",
       "heading": "Fixed during verification",
-      "line_start": 116,
-      "line_end": 127,
+      "line_start": 119,
+      "line_end": 130,
       "symbols_declared": [],
       "symbols_mentioned": [
         "T11"
@@ -113,8 +113,8 @@
       "level": 2,
       "num": "4",
       "heading": "Notes on method",
-      "line_start": 128,
-      "line_end": 136,
+      "line_start": 131,
+      "line_end": 139,
       "symbols_declared": [],
       "symbols_mentioned": [
         "T10"
@@ -1886,11 +1886,6 @@
     },
     {
       "from": "acceptance-results",
-      "to": "acceptance-results#2",
-      "relation": "contains"
-    },
-    {
-      "from": "acceptance-results",
       "to": "acceptance-results#T13",
       "relation": "contains"
     },
@@ -1898,6 +1893,11 @@
       "from": "acceptance-results#T13",
       "to": "T13",
       "relation": "declares"
+    },
+    {
+      "from": "acceptance-results",
+      "to": "acceptance-results#2",
+      "relation": "contains"
     },
     {
       "from": "acceptance-results",
