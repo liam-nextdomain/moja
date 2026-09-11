@@ -2,7 +2,7 @@
 id: acceptance-results
 title: "Acceptance criteria results"
 type: verification
-version: "1.1"
+version: "1.2"
 date: "2026-09-11"
 lang: en
 parents:
@@ -33,14 +33,14 @@ tags: [verification, acceptance, release-gate, unverified]
 
 # Acceptance criteria results
 
-> Translation of [acceptance-results.md](acceptance-results.md) v1.1. The Korean edition is the
+> Translation of [acceptance-results.md](acceptance-results.md) v1.2. The Korean edition is the
 > source of record where wording differs. Do not edit here.
 
 Verification results for T1-T16 of requirements §7.
 
 - Verified: 2026-09-05. T13 alone was checked separately on 2026-09-11.
 - Target: `Moja.app` (Debug build), macOS 27.0, Apple Silicon.
-  T13 was checked against a Release build installed in `/Applications`.
+  T13 was checked against the v0.1.0 release build installed in `/Applications`.
 - Automated: `swift scripts/acceptance.swift`. It launches the real app and checks with real files.
   The user's settings and logs are never touched (the app takes the `MOJA_DEFAULTS_SUITE` and
   `MOJA_LOG_DIR` environment variables).
@@ -81,6 +81,14 @@ Checked by hand on 2026-09-11. With launch at login turned on in a Release build
 `/Applications`, the app was in the menu bar right after logging back in. The system boot time
 and the app's process start time matched, and the login item registration pointed at
 `/Applications/Moja.app`.
+
+The app used for the check is the same binary as the v0.1.0 release asset. The executable inside
+the distributed zip and the executable of the installed copy matched by SHA-256.
+
+`5904ca7d58796c8edd1a09a3f4dc72b7383d3928960f52c192f1a93ee3dc2d89`
+
+So this result applies as-is to the build users actually download. The release note's wording,
+`이 배포본으로 확인했다` ("checked with this distributed build"), rests on this.
 
 The build is still **ad-hoc signed**, though. Nothing was rebuilt after it was installed, so the
 signature stayed the same and the registration was able to survive. Attaching a Developer ID

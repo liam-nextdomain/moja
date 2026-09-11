@@ -15,7 +15,7 @@
       "type": "document",
       "doc_type": "verification",
       "title": "Acceptance criteria results",
-      "version": "1.1",
+      "version": "1.2",
       "date": "2026-09-11",
       "path": "spec/acceptance-results.en.md",
       "tags": [
@@ -30,8 +30,8 @@
       "type": "document",
       "doc_type": "measurement",
       "title": "Measuring what `rename(2)` stores",
-      "version": "1.1",
-      "date": "2026-09-06",
+      "version": "1.2",
+      "date": "2026-09-11",
       "path": "research/rename-measurements.en.md",
       "tags": [
         "measurement",
@@ -41,7 +41,8 @@
         "exfat",
         "posix",
         "unicode-normalization",
-        "foundation-limits"
+        "foundation-limits",
+        "transfer-path"
       ]
     },
     {

@@ -2,7 +2,7 @@
 id: acceptance-results
 title: "수용 기준 결과"
 type: verification
-version: "1.1"
+version: "1.2"
 date: "2026-09-11"
 parents:
   - id: requirements
@@ -36,7 +36,7 @@ tags: [verification, acceptance, release-gate, unverified]
 
 - 검증일: 2026-09-05. T13만 2026-09-11에 따로 확인했다.
 - 대상: `Moja.app` (Debug 빌드), macOS 27.0, Apple Silicon.
-  T13은 `/Applications`에 설치한 Release 빌드로 확인했다.
+  T13은 `/Applications`에 설치한 v0.1.0 릴리스 빌드로 확인했다.
 - 자동 검증: `swift scripts/acceptance.swift`. 진짜 앱을 띄워 진짜 파일로 확인한다.
   사용자의 설정·로그는 건드리지 않는다 (앱이 `MOJA_DEFAULTS_SUITE`,
   `MOJA_LOG_DIR` 환경변수를 받는다).
@@ -77,6 +77,14 @@ swift scripts/acceptance.swift
 실행을 켜 두고 재로그인했더니 로그인 직후에 메뉴바에 떠 있었다. 시스템 부팅 시각과
 앱의 프로세스 시작 시각이 같았고, 로그인 항목 등록도 `/Applications/Moja.app`을
 가리키고 있었다.
+
+검증에 쓴 앱은 v0.1.0 릴리스 자산과 같은 바이너리다. 배포 zip 안의 실행 파일과 설치본의
+실행 파일이 SHA-256으로 일치했다.
+
+`5904ca7d58796c8edd1a09a3f4dc72b7383d3928960f52c192f1a93ee3dc2d89`
+
+그래서 이 결과는 사용자가 실제로 내려받는 빌드에 그대로 적용된다. "이 배포본으로 확인했다"는
+릴리스 노트의 문구는 여기에 근거한다.
 
 다만 이 빌드는 아직 **ad-hoc 서명**이다. 설치한 뒤로 다시 빌드하지 않았기 때문에
 서명이 그대로 유지되어 등록이 살아남을 수 있었다. Developer ID 서명을 붙이면 코드
