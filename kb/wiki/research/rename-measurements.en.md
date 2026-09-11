@@ -2,8 +2,8 @@
 id: rename-measurements
 title: "Measuring what `rename(2)` stores"
 type: measurement
-version: "1.1"
-date: "2026-09-06"
+version: "1.2"
+date: "2026-09-11"
 lang: en
 parents:
   - id: requirements
@@ -48,7 +48,7 @@ entities:
     type: script
     definition: "the measurement script that rebuilds the §1 table once a new volume is mounted and its path is passed in. it never goes through Foundation's path conversion"
     code: [scripts/probe-volume.swift]
-tags: [measurement, filesystem, apfs, hfs-plus, exfat, posix, unicode-normalization, foundation-limits]
+tags: [measurement, filesystem, apfs, hfs-plus, exfat, posix, unicode-normalization, foundation-limits, transfer-path]
 ---
 
 # Measuring what `rename(2)` stores
@@ -225,11 +225,71 @@ Build paths directly with `String.withCString` or `Array(name.utf8)`.
 
 ## 5. Still unmeasured
 
+What "measured" means here is the **volume normalization behaviour** of §1's table. It is taken by
+mounting the volume and probing it with POSIX calls, which is why an account and a client are
+needed. What happens to a name once the file is actually sent to someone else is a different kind
+of measurement, and §6 covers it separately.
+
 | Item | Why not | When |
 |---|---|---|
 | SMB / NFS network volumes | needs a server | commit 7 (around T11) |
 | Google Drive, OneDrive (FileProvider) | needs an account and client | commit 7 |
 | iCloud Drive | needs an account | commit 7 |
 
+Google Drive and iCloud Drive were measured as transfer paths in §6. That result says nothing about
+the volume's normalization behaviour: a recipient seeing a decomposed name tells you nothing about
+whether `rename(2)` changes the stored bytes on that volume. Treating the two as one measurement
+records a result that was never obtained.
+
 The measurement script now lives at `scripts/probe-volume.swift`, so mounting the volume and
 passing its path rebuilds the same table.
+
+---
+
+## 6. Transfer paths, measured
+
+§1 through §3 dealt with the bytes written to disk. This section deals with what the name looks
+like at the other end once the file is sent to someone else. **It is a different kind of
+measurement.** The earlier work read stored bytes directly through POSIX calls; this one sent files
+for real and checked the result by eye.
+
+- Measured on: not recorded (before the v0.1.0 release)
+- Method: take a file Moja had converted to NFC, send it down each path, read the name on Windows
+- Limits: browser and client versions were not controlled, and each path was checked once
+
+### 6.1 File sharing
+
+| Path | Result |
+|---|---|
+| `카카오톡 파일 공유` (KakaoTalk file share) | preserved |
+| `슬랙 파일 공유` (Slack file share) | preserved |
+| `구글 드라이브 업로드` (Google Drive upload) | decomposed |
+| `아이클라우드 드라이브 → 윈도우 iCloud` (iCloud Drive → iCloud for Windows) | decomposed |
+| `파인더 기본 압축 (zip)` (Finder's built-in zip) | not verified (T16) |
+| `원드라이브 동기화` (OneDrive sync) | not verified |
+| `AirDrop → 아이폰 → 윈도우` (AirDrop → iPhone → Windows) | not verified |
+
+### 6.2 Mail attachments
+
+| Sent from | Received at | Result |
+|---|---|---|
+| `네이버 메일 (웹)` (Naver Mail, web) | `네이버 메일` (Naver Mail) | preserved |
+| `네이버 메일 (웹)` (Naver Mail, web) | `지메일` (Gmail) | decomposed |
+| `지메일 (웹)` (Gmail, web) | `지메일` (Gmail) | decomposed |
+| `지메일 (웹)` (Gmail, web) | `네이버 메일` (Naver Mail) | preserved |
+| `macOS 기본 메일 앱` (macOS Mail) | `네이버 메일` (Naver Mail) | preserved |
+| `macOS 기본 메일 앱` (macOS Mail) | `지메일` (Gmail) | preserved |
+
+**The deciding variable is the sender, not the recipient.** Send from macOS Mail and the name
+survives wherever it lands; send from a webmail client and it survives only when the recipient is
+on Naver Mail. Putting this the other way round in user-facing guidance tells everyone who works
+with a Gmail correspondent that the app is useless to them, which is false.
+
+### 6.3 The cause was not established
+
+Which stage re-decomposes the name is unknown. It was never narrowed down to the sending client
+reading the file name, the relaying server storing it, or the receiving client writing it out. So
+"outside what Moja can reach" is an inference drawn from observation, not an established fact.
+
+The distinction matters because if the cause turns out to sit in the sending client, there may
+still be room for the app to intervene. Establishing it means reading the bytes at each stage.
