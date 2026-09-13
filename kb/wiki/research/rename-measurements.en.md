@@ -2,8 +2,8 @@
 id: rename-measurements
 title: "Measuring what `rename(2)` stores"
 type: measurement
-version: "1.2"
-date: "2026-09-11"
+version: "1.3"
+date: "2026-09-12"
 lang: en
 parents:
   - id: requirements
@@ -53,7 +53,7 @@ tags: [measurement, filesystem, apfs, hfs-plus, exfat, posix, unicode-normalizat
 
 # Measuring what `rename(2)` stores
 
-> Translation of [rename-measurements.md](rename-measurements.md) v1.0. The Korean edition is the
+> Translation of [rename-measurements.md](rename-measurements.md) v1.3. The Korean edition is the
 > source of record where wording differs. Do not edit here.
 
 An answer to requirements §11, item 4: "**measure** whether `rename(2)` actually changes the stored
@@ -253,7 +253,8 @@ like at the other end once the file is sent to someone else. **It is a different
 measurement.** The earlier work read stored bytes directly through POSIX calls; this one sent files
 for real and checked the result by eye.
 
-- Measured on: not recorded (before the v0.1.0 release)
+- Measured on: not recorded (before the v0.1.0 release). The `파인더 기본 압축 (zip)` row alone
+  was measured separately on 2026-09-12
 - Method: take a file Moja had converted to NFC, send it down each path, read the name on Windows
 - Limits: browser and client versions were not controlled, and each path was checked once
 
@@ -265,9 +266,18 @@ for real and checked the result by eye.
 | `슬랙 파일 공유` (Slack file share) | preserved |
 | `구글 드라이브 업로드` (Google Drive upload) | decomposed |
 | `아이클라우드 드라이브 → 윈도우 iCloud` (iCloud Drive → iCloud for Windows) | decomposed |
-| `파인더 기본 압축 (zip)` (Finder's built-in zip) | not verified (T16) |
+| `파인더 기본 압축 (zip)` (Finder's built-in zip) | preserved |
 | `원드라이브 동기화` (OneDrive sync) | not verified |
 | `AirDrop → 아이폰 → 윈도우` (AirDrop → iPhone → Windows) | not verified |
+
+**Zip splits on which tool the receiving side extracts with.** The `preserved` above came from
+extracting with `반디집` (Bandizip). Handed to Windows' built-in extraction, the same archive
+failed to extract at all, so it never reached the point of showing how the name looks. This row
+therefore attests only that zip carries composed names through unchanged.
+
+The cause of that failure was not investigated. Whether it lies in the archive's format or is
+specific to that Windows machine was not separated out, and, as with every other row in this
+table, it was checked only once.
 
 ### 6.2 Mail attachments
 

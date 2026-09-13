@@ -12,8 +12,8 @@ v1이 무엇을 해야 하는지, 그리고 그것이 실제로 되는지 확인
 
 | 문서 | 요약 | EN | 갱신 |
 |---|---|---|---|
-| [v1 요구사항](spec/requirements.md) | FR-1~FR-11, 수용 기준 T1~T16, 그리고 구현이 문서와 달라진 지점을 적은 12장 | [en](spec/requirements.en.md) | 2026-09-06 |
-| [수용 기준 결과](spec/acceptance-results.md) | T1~T16 검증 결과. 12개 자동 통과, 1개 사람 확인, 3개 미검증 | [en](spec/acceptance-results.en.md) | 2026-09-05 |
+| [v1 요구사항](spec/requirements.md) | FR-1~FR-11, 수용 기준 T1~T16, 그리고 구현이 문서와 달라진 지점을 적은 12장 | [en](spec/requirements.en.md) | 2026-09-12 |
+| [수용 기준 결과](spec/acceptance-results.md) | T1~T16 검증 결과. 12개 자동 통과, 3개 사람 확인, 1개 미검증 | [en](spec/acceptance-results.en.md) | 2026-09-12 |
 
 ## research
 
@@ -21,7 +21,7 @@ macOS 파일시스템·POSIX·Foundation이 실제로 어떻게 동작하는지 
 
 | 문서 | 요약 | EN | 갱신 |
 |---|---|---|---|
-| [`rename(2)` 저장 정규화 실측](research/rename-measurements.md) | APFS는 변환할 수 있고 HFS+·exFAT은 커널이 NFD를 강제한다. Foundation 쓰기 API 금지 목록의 근거 | [en](research/rename-measurements.en.md) | 2026-09-05 |
+| [`rename(2)` 저장 정규화 실측](research/rename-measurements.md) | APFS는 변환할 수 있고 HFS+·exFAT은 커널이 NFD를 강제한다. Foundation 쓰기 API 금지 목록의 근거 | [en](research/rename-measurements.en.md) | 2026-09-12 |
 
 ---
 

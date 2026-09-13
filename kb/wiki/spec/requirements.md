@@ -2,8 +2,8 @@
 id: requirements
 title: "macOS 한글 파일명 자동 NFC 변환 메뉴바 앱: v1 요구사항"
 type: requirements
-version: "1.8"
-date: "2026-09-10"
+version: "1.9"
+date: "2026-09-12"
 parents: []
 entities:
   - name: NFD
@@ -359,7 +359,7 @@ touch "$(printf '한글 문서.txt' | iconv -f utf-8 -t utf-8-mac)"
 | 원드라이브 동기화 | 미검증 | |
 | 아이클라우드 드라이브 → 윈도우 iCloud | 깨짐 | 검증일 2026-09-09 |
 | USB 메모리 (exFAT) | 깨짐 | 앱이 고칠 수 없다. `rename-measurements` 2.3절 참조 |
-| 파인더 기본 압축(zip) | 미검증 | zip의 UTF-8 플래그 누락은 알려져 있으나 Windows에서 직접 열어 보지 않았다 (T16) |
+| 파인더 기본 압축(zip) | 유지됨 | 검증일 2026-09-12. 받는 쪽에서 반디집으로 풀어 확인했다. Windows 기본 압축 풀기는 압축 해제 자체가 실패했다 (T16) |
 | AirDrop → 아이폰 → 윈도우 | 미검증 | |
 
 결과 표기는 세 가지다. **유지됨**은 앱이 만든 조합형 이름이 받는 쪽까지 그대로 도착한 경우,

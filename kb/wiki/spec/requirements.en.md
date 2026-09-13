@@ -2,8 +2,8 @@
 id: requirements
 title: "macOS menu bar app that converts Korean file names to NFC: v1 requirements"
 type: requirements
-version: "1.8"
-date: "2026-09-10"
+version: "1.9"
+date: "2026-09-12"
 lang: en
 parents: []
 entities:
@@ -97,7 +97,7 @@ tags: [requirements, v1, functional-spec, acceptance-criteria, menu-bar-app, kor
 
 # macOS menu bar app that converts Korean file names to NFC: v1 requirements
 
-> Translation of [requirements.md](requirements.md) v1.2. The Korean edition is the source of
+> Translation of [requirements.md](requirements.md) v1.9. The Korean edition is the source of
 > record where wording differs. Do not edit here.
 
 > This document was written to be handed to Claude Code as is, and was implemented up to v0.1.0 in
@@ -383,7 +383,7 @@ through each path below. This table goes into README verbatim.
 | OneDrive sync (`원드라이브 동기화`) | `미검증` (unverified) | |
 | iCloud Drive to iCloud for Windows (`아이클라우드 드라이브 → 윈도우 iCloud`) | `깨짐` (broken) | verified 2026-09-09 |
 | USB flash drive, exFAT (`USB 메모리 (exFAT)`) | `깨짐` (broken) | the app cannot fix this. see rename-measurements §2.3 |
-| Finder's built-in zip (`파인더 기본 압축(zip)`) | `미검증` (unverified) | zip's missing UTF-8 flag is a known problem, but nobody has opened one on Windows to check (T16) |
+| Finder's built-in zip (`파인더 기본 압축(zip)`) | `유지됨` (held) | verified 2026-09-12. extracted on the receiving side with `반디집` (Bandizip). Windows' built-in extraction failed outright (T16) |
 | AirDrop to iPhone to Windows (`AirDrop → 아이폰 → 윈도우`) | `미검증` (unverified) | |
 
 Results take one of three values. `유지됨` (survived) means the composed name the app produced

@@ -2,8 +2,8 @@
 id: acceptance-results
 title: "수용 기준 결과"
 type: verification
-version: "1.2"
-date: "2026-09-11"
+version: "1.3"
+date: "2026-09-12"
 parents:
   - id: requirements
     version: "1.0"
@@ -20,7 +20,7 @@ entities:
     code: [scripts/acceptance.swift]
   - name: unverified-scenario
     type: concept
-    definition: "이 환경에서 확인할 방법이 없어 남은 T15(24시간 방치)와 T16(Windows에서 열기). v1.0.0의 마지막 차단 요인이다"
+    definition: "이 환경에서 확인할 방법이 없어 남은 T15(24시간 방치). v1.0.0의 마지막 차단 요인이다"
   - name: reconnect-recovery
     type: mechanism
     definition: "'연결 안 됨'이 된 폴더의 감시자를 놓아 주고 볼륨 마운트 알림을 듣되, 알림이 오지 않는 네트워크 공유를 위해 끊긴 폴더가 하나라도 있는 동안에만 보조 확인을 도는 복구 방식"
@@ -34,9 +34,10 @@ tags: [verification, acceptance, release-gate, unverified]
 
 요구사항 7장 T1~T16의 검증 결과.
 
-- 검증일: 2026-09-05. T13만 2026-09-11에 따로 확인했다.
+- 검증일: 2026-09-05. T13은 2026-09-11에, T16은 2026-09-12에 따로 확인했다.
 - 대상: `Moja.app` (Debug 빌드), macOS 27.0, Apple Silicon.
   T13은 `/Applications`에 설치한 v0.1.0 릴리스 빌드로 확인했다.
+  T16은 받는 쪽 Windows에서 압축을 풀어 확인했다.
 - 자동 검증: `swift scripts/acceptance.swift`. 진짜 앱을 띄워 진짜 파일로 확인한다.
   사용자의 설정·로그는 건드리지 않는다 (앱이 `MOJA_DEFAULTS_SUITE`,
   `MOJA_LOG_DIR` 환경변수를 받는다).
@@ -62,7 +63,7 @@ tags: [verification, acceptance, release-gate, unverified]
 | T13 | 로그인 시 자동 실행 후 재로그인 | ✅ | 사람 | 재로그인 직후 메뉴바에 떠 있음. ad-hoc 서명이므로 Developer ID 서명 뒤에 다시 확인해야 한다 |
 | T14 | 일시정지 중 생성 → 재개 | ✅ | 자동 | 정지 중 그대로, 재개 시 재스캔으로 변환 |
 | T15 | 24시간 방치 | ⏳ | — | **미검증** (2절 참조) |
-| T16 | zip으로 압축해 Windows에서 열기 | ⏳ | — | **미검증** (2절 참조) |
+| T16 | zip으로 압축해 Windows에서 열기 | ✅ | 사람 | 반디집으로 풀었을 때 유지됨. Windows 기본 압축 풀기는 해제 자체가 실패 |
 
 자동 검증 12개는 `scripts/acceptance.swift`로 언제든 다시 돌릴 수 있다.
 
@@ -91,11 +92,32 @@ swift scripts/acceptance.swift
 서명이 달라져서 기존 등록이 무효가 되므로, 그때 재등록이 제대로 이루어지는지는
 **다시 확인해야 한다.**
 
+### T16: Windows에서 열기
+
+2026-09-12에 사람이 직접 확인했다. 모자로 조합형이 된 파일을 파인더 기본 압축(zip)으로
+묶어 Windows로 보내고, 받는 쪽에서 압축을 풀어 이름을 확인했더니 한글 이름이 깨지지 않고
+그대로 유지되어 있었다. 그러므로 zip 경로는 전송 도중에 이름을 다시 분해하지 않는다.
+
+다만 **압축을 푼 도구는 반디집이다.** Windows 기본 압축 풀기로는 압축 해제 자체가
+실패해서, 파일 이름을 확인하는 단계까지 가지도 못했다. 따라서 이 결과는 "zip이 조합형
+이름을 그대로 실어 나른다"는 것까지만 뒷받침해 주고, "Windows 사용자가 어느 도구를
+쓰더라도 괜찮다"는 뜻으로 읽어서는 안 된다.
+
+기본 압축 풀기가 왜 실패했는지는 규명하지 않았다. 압축 파일 자체의 형식 때문인지 그
+Windows 기기에 국한된 문제인지 가려내지 않았고, 확인한 횟수도 한 번뿐이다. 이름 정규화와는
+별개의 사건이므로 모자가 손댈 자리는 아니지만, README에는 반드시 적어야 한다. 받는 사람이
+기본 도구로는 열지 못할 수도 있다는 사실을 보내는 사용자가 미리 알고 있어야 하기 때문이다.
+
+한편 zip이 아닌 경로에는 **확인된 제약**이 그대로 남아 있다. macOS의 exFAT·HFS+ 드라이버는
+파일 이름을 강제로 분해형으로 저장한다
+([rename-measurements](../research/rename-measurements.md)). 따라서 조합형으로 바꾼 파일을 exFAT
+USB에 복사하면 macOS가 다시 분해형으로 되돌린다. **모자가 고칠 수 있는 문제가 아니다.**
+
 ---
 
 ## 2. 아직 검증하지 못한 것
 
-솔직하게 적는다. 아래 둘은 이 환경에서 확인할 방법이 없었다.
+솔직하게 적는다. 아래 항목은 이 환경에서 확인할 방법이 없었다.
 
 ### T15: 24시간 방치 (메모리 30MB 이하)
 
@@ -106,16 +128,6 @@ swift scripts/acceptance.swift
 - 수용 검증 스크립트가 앱을 여러 번 띄우고 1,000개 파일을 투입하는 동안 크래시 없음
 
 **해야 할 일**: 하루 켜 두고 활성 상태 보기에서 메모리를 확인한다.
-
-### T16: Windows에서 열기
-
-Windows 기기가 필요하다. 다만 관련해서 **확인된 제약**이 있다:
-macOS의 exFAT·HFS+ 드라이버는 파일 이름을 강제로 분해형으로 저장한다
-([rename-measurements](../research/rename-measurements.md)). 따라서 조합형으로 바꾼 파일을 exFAT USB에
-복사하면 macOS가 다시 분해형으로 되돌린다. **모자가 고칠 수 있는 문제가 아니다.**
-
-**해야 할 일**: 파인더 기본 압축(zip)으로 묶어 Windows에서 열어 확인한다.
-7장의 전송 경로 검증표도 함께 채운다.
 
 ---
 

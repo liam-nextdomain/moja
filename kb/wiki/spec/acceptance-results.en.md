@@ -2,8 +2,8 @@
 id: acceptance-results
 title: "Acceptance criteria results"
 type: verification
-version: "1.2"
-date: "2026-09-11"
+version: "1.3"
+date: "2026-09-12"
 lang: en
 parents:
   - id: requirements
@@ -21,7 +21,7 @@ entities:
     code: [scripts/acceptance.swift]
   - name: unverified-scenario
     type: concept
-    definition: "T15 (24 hours idle) and T16 (opening on Windows), left because this environment offers no way to check them. the last thing blocking v1.0.0"
+    definition: "T15 (24 hours idle), left because this environment offers no way to check it. the last thing blocking v1.0.0"
   - name: reconnect-recovery
     type: mechanism
     definition: "recovery that releases the watcher of a folder that went 'not connected' and listens for volume mount notifications, running a secondary sweep only while at least one folder is disconnected, for network shares that send no notification"
@@ -33,14 +33,15 @@ tags: [verification, acceptance, release-gate, unverified]
 
 # Acceptance criteria results
 
-> Translation of [acceptance-results.md](acceptance-results.md) v1.2. The Korean edition is the
+> Translation of [acceptance-results.md](acceptance-results.md) v1.3. The Korean edition is the
 > source of record where wording differs. Do not edit here.
 
 Verification results for T1-T16 of requirements §7.
 
-- Verified: 2026-09-05. T13 alone was checked separately on 2026-09-11.
+- Verified: 2026-09-05. T13 was checked separately on 2026-09-11, and T16 on 2026-09-12.
 - Target: `Moja.app` (Debug build), macOS 27.0, Apple Silicon.
   T13 was checked against the v0.1.0 release build installed in `/Applications`.
+  T16 was checked by extracting the archive on the receiving Windows machine.
 - Automated: `swift scripts/acceptance.swift`. It launches the real app and checks with real files.
   The user's settings and logs are never touched (the app takes the `MOJA_DEFAULTS_SUITE` and
   `MOJA_LOG_DIR` environment variables).
@@ -66,7 +67,7 @@ Verification results for T1-T16 of requirements §7.
 | T13 | launch at login, then re-login | ✅ | manual | in the menu bar right after the re-login. the build is ad-hoc signed, so it must be checked again after a Developer ID signature |
 | T14 | created while paused, then resumed | ✅ | auto | untouched while paused, converted by the rescan on resume |
 | T15 | 24 hours idle | ⏳ | — | **unverified** (see §2) |
-| T16 | zip it and open on Windows | ⏳ | — | **unverified** (see §2) |
+| T16 | zip it and open on Windows | ✅ | manual | names held when extracted with `반디집` (Bandizip). Windows' built-in extraction failed outright |
 
 The 12 automated checks can be re-run at any time with `scripts/acceptance.swift`.
 
@@ -95,11 +96,34 @@ signature stayed the same and the registration was able to survive. Attaching a 
 signature changes the code signature and invalidates the existing registration, so whether
 re-registration then works correctly **has to be checked again**.
 
+### T16: opening on Windows
+
+Checked by hand on 2026-09-12. A file Moja had converted to composed form was bundled with
+Finder's built-in zip and sent to Windows, and extracting it there showed the Korean name intact.
+So the zip path does not re-decompose the name in transit.
+
+The tool that extracted it, however, was **`반디집` (Bandizip)**. Windows' built-in extraction
+failed outright, so it never reached the point of showing a file name at all. This result
+therefore supports only "zip carries composed names through unchanged", and must not be read as
+"any tool a Windows user reaches for will do".
+
+Why the built-in extraction failed was not investigated. Whether the cause lies in the archive's
+format or is specific to that Windows machine was not separated out, and it was checked only once.
+It is a separate matter from name normalization and not Moja's to fix, but it does have to go into
+the README: someone sending a file needs to know in advance that the recipient's default tool may
+not open it.
+
+For paths other than zip, the **confirmed constraint** still stands. The macOS exFAT and HFS+
+drivers force file names to be stored in decomposed form
+([rename-measurements](../research/rename-measurements.en.md)). So copying a file converted to
+composed form onto an exFAT USB stick makes macOS turn it back into decomposed form.
+**This is not something Moja can fix.**
+
 ---
 
 ## 2. Not yet verified
 
-Stated plainly: there was no way to check the two below in this environment.
+Stated plainly: there was no way to check the item below in this environment.
 
 ### T15: 24 hours idle (memory under 30MB)
 
@@ -110,17 +134,6 @@ It needs 24 hours. The following were checked instead.
 - no crash while the acceptance script launched the app repeatedly and dropped in 1,000 files
 
 **To do**: leave it running for a day and read the memory figure in Activity Monitor.
-
-### T16: opening on Windows
-
-It needs a Windows machine. There is, however, a **confirmed constraint**: the macOS exFAT and
-HFS+ drivers force file names to be stored in decomposed form
-([rename-measurements](../research/rename-measurements.en.md)). So copying a file converted to
-composed form onto an exFAT USB stick makes macOS turn it back into decomposed form.
-**This is not something Moja can fix.**
-
-**To do**: compress with Finder's built-in zip and open it on Windows. Fill in the transfer path
-table in requirements §7.1 at the same time.
 
 ---
 

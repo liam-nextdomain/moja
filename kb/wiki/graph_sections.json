@@ -6,7 +6,7 @@
   "stats": {
     "sections": 61,
     "symbols": 27,
-    "edges": 334
+    "edges": 332
   },
   "sections": [
     {
@@ -16,8 +16,8 @@
       "level": 2,
       "num": "1",
       "heading": "Results",
-      "line_start": 50,
-      "line_end": 77,
+      "line_start": 51,
+      "line_end": 78,
       "symbols_declared": [
         "T1",
         "T2",
@@ -45,36 +45,10 @@
       "level": 3,
       "num": "T13",
       "heading": "launch at login",
-      "line_start": 78,
-      "line_end": 99,
+      "line_start": 79,
+      "line_end": 98,
       "symbols_declared": [
         "T13"
-      ],
-      "symbols_mentioned": []
-    },
-    {
-      "id": "acceptance-results#2",
-      "doc": "acceptance-results",
-      "path": "spec/acceptance-results.en.md",
-      "level": 2,
-      "num": "2",
-      "heading": "Not yet verified",
-      "line_start": 100,
-      "line_end": 103,
-      "symbols_declared": [],
-      "symbols_mentioned": []
-    },
-    {
-      "id": "acceptance-results#T15",
-      "doc": "acceptance-results",
-      "path": "spec/acceptance-results.en.md",
-      "level": 3,
-      "num": "T15",
-      "heading": "24 hours idle (memory under 30MB)",
-      "line_start": 104,
-      "line_end": 113,
-      "symbols_declared": [
-        "T15"
       ],
       "symbols_mentioned": []
     },
@@ -85,10 +59,36 @@
       "level": 3,
       "num": "T16",
       "heading": "opening on Windows",
-      "line_start": 114,
-      "line_end": 126,
+      "line_start": 99,
+      "line_end": 123,
       "symbols_declared": [
         "T16"
+      ],
+      "symbols_mentioned": []
+    },
+    {
+      "id": "acceptance-results#2",
+      "doc": "acceptance-results",
+      "path": "spec/acceptance-results.en.md",
+      "level": 2,
+      "num": "2",
+      "heading": "Not yet verified",
+      "line_start": 124,
+      "line_end": 127,
+      "symbols_declared": [],
+      "symbols_mentioned": []
+    },
+    {
+      "id": "acceptance-results#T15",
+      "doc": "acceptance-results",
+      "path": "spec/acceptance-results.en.md",
+      "level": 3,
+      "num": "T15",
+      "heading": "24 hours idle (memory under 30MB)",
+      "line_start": 128,
+      "line_end": 139,
+      "symbols_declared": [
+        "T15"
       ],
       "symbols_mentioned": []
     },
@@ -99,8 +99,8 @@
       "level": 2,
       "num": "3",
       "heading": "Fixed during verification",
-      "line_start": 127,
-      "line_end": 138,
+      "line_start": 140,
+      "line_end": 151,
       "symbols_declared": [],
       "symbols_mentioned": [
         "T11"
@@ -113,8 +113,8 @@
       "level": 2,
       "num": "4",
       "heading": "Notes on method",
-      "line_start": 139,
-      "line_end": 147,
+      "line_start": 152,
+      "line_end": 160,
       "symbols_declared": [],
       "symbols_mentioned": [
         "T10"
@@ -280,7 +280,7 @@
       "num": "6",
       "heading": "Transfer paths, measured",
       "line_start": 249,
-      "line_end": 259,
+      "line_end": 260,
       "symbols_declared": [],
       "symbols_mentioned": []
     },
@@ -291,12 +291,10 @@
       "level": 3,
       "num": "6.1",
       "heading": "File sharing",
-      "line_start": 260,
-      "line_end": 271,
+      "line_start": 261,
+      "line_end": 281,
       "symbols_declared": [],
-      "symbols_mentioned": [
-        "T16"
-      ]
+      "symbols_mentioned": []
     },
     {
       "id": "rename-measurements#6.2",
@@ -305,8 +303,8 @@
       "level": 3,
       "num": "6.2",
       "heading": "Mail attachments",
-      "line_start": 272,
-      "line_end": 287,
+      "line_start": 282,
+      "line_end": 297,
       "symbols_declared": [],
       "symbols_mentioned": []
     },
@@ -317,8 +315,8 @@
       "level": 3,
       "num": "6.3",
       "heading": "The cause was not established",
-      "line_start": 288,
-      "line_end": 295,
+      "line_start": 298,
+      "line_end": 305,
       "symbols_declared": [],
       "symbols_mentioned": []
     },
@@ -1833,7 +1831,6 @@
       "declared_in": "requirements#7",
       "mentioned_in": [
         "rename-measurements#2.3",
-        "rename-measurements#6.1",
         "requirements#7.1"
       ],
       "cited_by": []
@@ -1947,6 +1944,16 @@
     },
     {
       "from": "acceptance-results",
+      "to": "acceptance-results#T16",
+      "relation": "contains"
+    },
+    {
+      "from": "acceptance-results#T16",
+      "to": "T16",
+      "relation": "declares"
+    },
+    {
+      "from": "acceptance-results",
       "to": "acceptance-results#2",
       "relation": "contains"
     },
@@ -1959,21 +1966,6 @@
       "from": "acceptance-results#T15",
       "to": "T15",
       "relation": "declares"
-    },
-    {
-      "from": "acceptance-results",
-      "to": "acceptance-results#T16",
-      "relation": "contains"
-    },
-    {
-      "from": "acceptance-results#T16",
-      "to": "T16",
-      "relation": "declares"
-    },
-    {
-      "from": "acceptance-results#T16",
-      "to": "requirements#7.1",
-      "relation": "references"
     },
     {
       "from": "acceptance-results",
@@ -2109,11 +2101,6 @@
       "from": "rename-measurements",
       "to": "rename-measurements#6.1",
       "relation": "contains"
-    },
-    {
-      "from": "rename-measurements#6.1",
-      "to": "T16",
-      "relation": "mentions"
     },
     {
       "from": "rename-measurements",

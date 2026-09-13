@@ -15,8 +15,8 @@
       "type": "document",
       "doc_type": "verification",
       "title": "Acceptance criteria results",
-      "version": "1.2",
-      "date": "2026-09-11",
+      "version": "1.3",
+      "date": "2026-09-12",
       "path": "spec/acceptance-results.en.md",
       "tags": [
         "verification",
@@ -30,8 +30,8 @@
       "type": "document",
       "doc_type": "measurement",
       "title": "Measuring what `rename(2)` stores",
-      "version": "1.2",
-      "date": "2026-09-11",
+      "version": "1.3",
+      "date": "2026-09-12",
       "path": "research/rename-measurements.en.md",
       "tags": [
         "measurement",
@@ -50,8 +50,8 @@
       "type": "document",
       "doc_type": "requirements",
       "title": "macOS menu bar app that converts Korean file names to NFC: v1 requirements",
-      "version": "1.8",
-      "date": "2026-09-10",
+      "version": "1.9",
+      "date": "2026-09-12",
       "path": "spec/requirements.en.md",
       "tags": [
         "requirements",
@@ -72,7 +72,7 @@
       "id": "unverified-scenario",
       "type": "entity",
       "entity_type": "concept",
-      "definition": "T15 (24 hours idle) and T16 (opening on Windows), left because this environment offers no way to check them. the last thing blocking v1.0.0"
+      "definition": "T15 (24 hours idle), left because this environment offers no way to check it. the last thing blocking v1.0.0"
     },
     {
       "id": "reconnect-recovery",
